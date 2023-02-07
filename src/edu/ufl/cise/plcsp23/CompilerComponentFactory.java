@@ -28,10 +28,7 @@ class IScannerImplementation implements IScanner {
 
 	@Override
 	public IToken next() throws LexicalException {
-		System.out.println(tokens.size());
-		for(IToken token : tokens) {
-			System.out.println(token.getTokenString() + " " + token.getKind() );
-		}
+
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
 			//If there aren't any tokens, throw an exception
@@ -73,8 +70,7 @@ class IScannerImplementation implements IScanner {
 		int currColumn = 0;
 		while(stringSpot < stringLength) {
 			currColumn++;
-			//print ascii value of currentChar
-			System.out.println((int) input.charAt(stringSpot));
+
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
 			//And once I can't extend the token anymore, I'll add it to the array of tokens [not including the current character]
 			//e.g. for '0ada int' i would keep extending until I hit the space, catch the space, and then backtrack to the previous character
@@ -156,8 +152,7 @@ class IScannerImplementation implements IScanner {
 					continue;
 				}
 				else {
-					System.out.println("Invalid character");
-					System.out.println("Character: " + currentChar);
+
 					throw new LexicalException("Invalid character");
 				}
 
