@@ -12,6 +12,8 @@ package edu.ufl.cise.plcsp23;
 
 import java.util.ArrayList;
 
+import static edu.ufl.cise.plcsp23.IToken.Kind.NUM_LIT;
+
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) throws LexicalException {
 		//Add statement to return an instance of your scanner
@@ -28,7 +30,15 @@ class IScannerImplementation implements IScanner {
 
 	@Override
 	public IToken next() throws LexicalException {
-
+		for(IToken token: tokens) {
+			if(token.getKind().equals(NUM_LIT)) {
+				try {
+					int val = Integer.parseInt(token.getTokenString());
+				} catch (NumberFormatException e) {
+					throw new LexicalException("Number out of bounds");
+				}
+			}
+		}
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
 			//If there aren't any tokens, throw an exception
@@ -37,11 +47,12 @@ class IScannerImplementation implements IScanner {
 			position++;
 			if(position >= tokens.size()) {
 				//if trying to get a token that doesn't exist return last token
-				return tokens.get(tokens.size()-1);
+				tokenToReturn = tokens.get(tokens.size()-1);
 			} else {
-				return tokens.get(position-1);
+				tokenToReturn = tokens.get(position-1);
 			}
-
+			//Check if the token is a numLit token, and if so, check if it's in the range of an integer
+			return tokenToReturn;
 
 			//Otherwise return the token at the current position and increment the position
 		}
