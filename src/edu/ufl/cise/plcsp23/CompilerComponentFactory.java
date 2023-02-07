@@ -111,7 +111,7 @@ class IScannerImplementation implements IScanner {
 					} else {
 						if((int) currentChar == 10) {
 							currLine++;
-							currColumn=0;
+							currColumn=0; //New line, so reset column and increment line
 						}
 						//add currentToken to the array of tokens
 						if(currentTokenType.equals("") ) {
@@ -147,6 +147,7 @@ class IScannerImplementation implements IScanner {
 						currentChar = input.charAt(stringSpot);
 						asciiValue = (int) currentChar;
 					}
+					//So everything after the comment is ignored until a new line is reached
 					currentToken = "";
 					currentTokenType = "";
 					continue;
