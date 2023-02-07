@@ -30,8 +30,10 @@ class IScannerImplementation implements IScanner {
 	public IToken next() throws LexicalException {
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
+			//If there aren't any tokens, throw an exception
 		} else {
-			return tokens.get(0);
+			return tokens.get(position++);
+			//Otherwise return the token at the current position and increment the position
 		}
 	}
 
@@ -50,6 +52,7 @@ class IScannerImplementation implements IScanner {
 		int stringLength = input.length();
 		int stringSpot = 0;
 		String currentToken = "";
+		String currentTokenType = "";
 		System.out.println(stringLength);
 		System.out.println(in);
 		while(stringSpot < stringLength) {
@@ -62,7 +65,31 @@ class IScannerImplementation implements IScanner {
 
 			//print ascii value of currentChar
 			System.out.println((int) currentChar);
+			if(currentToken.isEmpty()) {
+				//If empty token, then try and figure out what currentChar can belong to
+				//e.g if currentChar is a number, then it's a NumLit, or if it's a letter then it can be an ident or a reserved word
+				//or if it's a quote then it's the beginning of a string literal
+				//Java supports switch statements with chars, so I'll use that
+				int asciiValue = (int) currentChar;
+				//I was initially going to use a switch statement, but unfortunately Java doesn't support ranges in switch statements
+				//So for sake of readability (and not having to write dozens of cases) I'll use if statements
 
+
+				// All valid characters are shown in LexicalStructure.pdf, so anything not there is a LexicalException
+				// I will move these if statements into a separate method, in the future, once I get things working
+				if(asciiValue == 48) { 	//0, but NOTE that since tokens that start with 0 are only valid if they are the only digit, I can essentially end this token here
+					currentToken += currentChar;
+					currentTokenType = "NumLit";
+					{
+						//todo: put stuff here for single digit 0
+					}
+				} else if(asciiValue > 48 && asciiValue < 58) { //1-9, I do wish Java had support for ranges in switch statements
+					currentToken += currentChar;
+					currentTokenType = "NumLit";
+				} else {
+					throw new LexicalException("Invalid character");
+				}
+			}
 			if(analyzeLexicalStructure(currentToken, currentChar)) {
 				currentToken += currentChar;
 			}
