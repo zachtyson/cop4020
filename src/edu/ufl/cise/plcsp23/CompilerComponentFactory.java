@@ -21,12 +21,16 @@ public class CompilerComponentFactory {
 
 class IScannerImplementation implements IScanner {
 	private int position = 0;
-	private IToken[] tokens;
+	private IToken[] tokens = new IToken[0];
 	//Scanner has an array of ITokens, and a position variable for the next() method
 
 	@Override
 	public IToken next() throws LexicalException {
-		throw new LexicalException("Not implemented yet");
+		if(tokens.length == 0) {
+			throw new LexicalException("No tokens");
+		} else {
+			return tokens[0];
+		}
 	}
 
 	private String input;
@@ -34,7 +38,8 @@ class IScannerImplementation implements IScanner {
 	public IScannerImplementation(String in) throws LexicalException {
 		//check if input is empty or null
 		if(in == null || in.length() == 0) {
-			tokens = new IToken[0];
+			tokens = new IToken[1];
+			tokens[0] = new ITokenImplementation(input,"EOF",0,0);
 		}
 		input = in;
 		//Iterating over the input string character by character
@@ -111,9 +116,9 @@ class ITokenImplementation implements IToken {
 		return tokenString;
 	}
 
-	public ITokenImplementation(String s, Kind k, SourceLocation sl) {
-		tokenString = s;
-		kind = k;
-		sourceLocation = sl;
+	public ITokenImplementation(String t, String k, int x, int y) {
+		tokenString = t;
+		kind = Kind.valueOf(k);
+		sourceLocation = new SourceLocation(x, y);
 	}
 }
