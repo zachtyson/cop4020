@@ -31,6 +31,13 @@ class IScannerImplementation implements IScanner {
 	@Override
 	public IToken next() throws LexicalException {
 		for(IToken token: tokens) {
+			System.out.println(token.getKind() + " " + token.getTokenString());
+
+
+		}
+		System.out.println();
+		System.out.println();
+		for(IToken token: tokens) {
 			if(token.getKind().equals(NUM_LIT)) {
 				try {
 					int val = Integer.parseInt(token.getTokenString());
@@ -80,7 +87,6 @@ class IScannerImplementation implements IScanner {
 		int currLine = 1;
 		int currColumn = 0;
 		while(stringSpot < stringLength) {
-			System.out.println("Current character: " + input.charAt(stringSpot));
 			currColumn++;
 
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
@@ -169,7 +175,7 @@ class IScannerImplementation implements IScanner {
 					continue;
 				}
 				//else if asciiValue is in operators[]
-				else if(asciiValue == 61) {
+				else if(doesArrayContain(operatorChars, asciiValue)) {
 					//First character signifies this can be an operator
 					currentTokenType = "OPERATOR";
 					currentToken += currentChar;
@@ -255,7 +261,7 @@ class IScannerImplementation implements IScanner {
 				//if it isn't, then return false
 				//List of operators: . , ? : ( ) < > [ ] { } = == <-> <= >= ! & && | || + 0 * ** / %
 				String[] operators = {".", ",", "?", ":", "(", ")", "<", ">", "[", "]", "{", "}", "=", "==", "<->", "<=", ">=", "!", "&", "&&", "|", "||", "+", "-", "*", "**", "/", "%"};
-				if(Arrays.asList(operators).contains(currentToken + currentChar)) {
+				if(doesArrayContain(operators, currentToken + currentChar)) {
 					return true;
 				} else {
 					return false;
@@ -264,6 +270,24 @@ class IScannerImplementation implements IScanner {
 				throw new LexicalException("Invalid token");
 		}
 		return true;
+	}
+
+	public boolean doesArrayContain(String[] array, String string) {
+		for(String element : array) {
+			if(element.equals(string)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean doesArrayContain(int[] array, int number) {
+		for(int element : array) {
+			if(element == number) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 
@@ -304,72 +328,44 @@ class ITokenImplementation implements IToken {
 		tokenString = t;
 		if(k == "OPERATOR") {
 			//call function for operator
-
+			k = getTokenOperatorEnum(t);
 		}
 		kind = Kind.valueOf(k);
 		sourceLocation = new SourceLocation(x, y);
 	}
 
 	public static String getTokenOperatorEnum(String input) {
-		switch (input) {
-			case ".":
-				return "DOT";
-			case ",":
-				return "COMMA";
-			case "?":
-				return "QUESTION";
-			case ":":
-				return "COLON";
-			case "(":
-				return "LPAREN";
-			case ")":
-				return "RPAREN";
-			case "<":
-				return "LT";
-			case ">":
-				return "GT";
-			case "[":
-				return "LSQUARE";
-			case "]":
-				return "RSQUARE";
-			case "{":
-				return "LCURLY";
-			case "}":
-				return "RCURLY";
-			case "=":
-				return "ASSIGN";
-			case "==":
-				return "EQ";
-			case "<->":
-				return "EXCHANGE";
-			case "<=":
-				return "LE";
-			case ">=":
-				return "GE";
-			case "!":
-				return "BANG";
-			case "&":
-				return "BITAND";
-			case "&&":
-				return "AND";
-			case "|":
-				return "BITOR";
-			case "||":
-				return "OR";
-			case "+":
-				return "PLUS";
-			case "-":
-				return "MINUS";
-			case "*":
-				return "TIMES";
-			case "**":
-				return "EXP";
-			case "/":
-				return "DIV";
-			case "%":
-				return "MOD";
-		}
-		return "ERROR";
+		return switch (input) {
+			case "." -> "DOT";
+			case "," -> "COMMA";
+			case "?" -> "QUESTION";
+			case ":" -> "COLON";
+			case "(" -> "LPAREN";
+			case ")" -> "RPAREN";
+			case "<" -> "LT";
+			case ">" -> "GT";
+			case "[" -> "LSQUARE";
+			case "]" -> "RSQUARE";
+			case "{" -> "LCURLY";
+			case "}" -> "RCURLY";
+			case "=" -> "ASSIGN";
+			case "==" -> "EQ";
+			case "<->" -> "EXCHANGE";
+			case "<=" -> "LE";
+			case ">=" -> "GE";
+			case "!" -> "BANG";
+			case "&" -> "BITAND";
+			case "&&" -> "AND";
+			case "|" -> "BITOR";
+			case "||" -> "OR";
+			case "+" -> "PLUS";
+			case "-" -> "MINUS";
+			case "*" -> "TIMES";
+			case "**" -> "EXP";
+			case "/" -> "DIV";
+			case "%" -> "MOD";
+			default -> "ERROR";
+		};
 	}
 
 }
