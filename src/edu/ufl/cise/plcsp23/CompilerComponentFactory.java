@@ -30,13 +30,22 @@ class IScannerImplementation implements IScanner {
 	public IToken next() throws LexicalException {
 		for(IToken token : tokens) {
 			System.out.println(token.getTokenString() + " " + token.getKind() );
-			System.out.println("XXX");
+			System.out.println("ZZZ");
 		}
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
 			//If there aren't any tokens, throw an exception
 		} else {
-			return tokens.get(position++);
+			IToken tokenToReturn;
+			position++;
+			if(position >= tokens.size()) {
+				//if trying to get a token that doesn't exist return last token
+				return tokens.get(tokens.size()-1);
+			} else {
+				return tokens.get(position-1);
+			}
+
+
 			//Otherwise return the token at the current position and increment the position
 		}
 	}
@@ -109,7 +118,8 @@ class IScannerImplementation implements IScanner {
 						continue;
 						//reset currentToken to ""
 					}
-				} else {
+				}
+				else {
 					throw new LexicalException("Invalid character");
 				}
 
