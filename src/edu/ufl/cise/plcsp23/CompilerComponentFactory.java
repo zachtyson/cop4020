@@ -28,9 +28,9 @@ class IScannerImplementation implements IScanner {
 
 	@Override
 	public IToken next() throws LexicalException {
+		System.out.println(tokens.size());
 		for(IToken token : tokens) {
 			System.out.println(token.getTokenString() + " " + token.getKind() );
-			System.out.println("ZZZ");
 		}
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
@@ -67,10 +67,14 @@ class IScannerImplementation implements IScanner {
 		int stringSpot = 0;
 		String currentToken = "";
 		String currentTokenType = "";
-		int x = 0;
-		int y = 0;
+		int line = 1;
+		int column = 1;
+		int currLine = 1;
+		int currColumn = 0;
 		while(stringSpot < stringLength) {
+			currColumn++;
 			//print ascii value of currentChar
+			System.out.println((int) input.charAt(stringSpot));
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
 			//And once I can't extend the token anymore, I'll add it to the array of tokens [not including the current character]
 			//e.g. for '0ada int' i would keep extending until I hit the space, catch the space, and then backtrack to the previous character
@@ -81,6 +85,8 @@ class IScannerImplementation implements IScanner {
 			//print ascii value of currentChar
 
 			if(currentToken.isEmpty()) {
+				line = currLine;
+				column = currColumn;
 				//If empty token, then try and figure out what currentChar can belong to
 				//e.g if currentChar is a number, then it's a NumLit, or if it's a letter then it can be an ident or a reserved word
 				//or if it's a quote then it's the beginning of a string literal
@@ -95,7 +101,7 @@ class IScannerImplementation implements IScanner {
 				if(asciiValue == 48) { 	//0, but NOTE that since tokens that start with 0 are only valid if they are the only digit, I can essentially end this token here
 					currentToken += currentChar;
 					currentTokenType = "NUM_LIT";
-					tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+					tokens.add(new INumLitImplementation(currentToken, currentTokenType, line, column));
 					currentToken = "";
 					currentTokenType = "";
 					stringSpot++;
@@ -107,11 +113,20 @@ class IScannerImplementation implements IScanner {
 					if(currentTokenType.equals("STRING_LIT")) {
 						currentToken += currentChar;
 					} else {
+						if((int) currentChar == 10) {
+							currLine++;
+							currColumn=0;
+						}
 						//add currentToken to the array of tokens
+						if(currentTokenType.equals("") ) {
+							//If currentTokenType is empty, then it's a space, so just ignore it
+							stringSpot++;
+							continue;
+						}
 						if(currentTokenType.equals("NUM_LIT")) {
-							tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+							tokens.add(new INumLitImplementation(currentToken, currentTokenType, line, column));
 						} else {
-							tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+							tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
 						}
 						currentToken = "";
 						currentTokenType = "";
@@ -125,27 +140,54 @@ class IScannerImplementation implements IScanner {
 					//Assume it's an ident until it matches the list of reserved words
 					currentTokenType = "IDENT";
 					currentToken += currentChar;
+					stringSpot++;
+					continue;
 
-
+				} else if (asciiValue == 126) {
+					currentTokenType = "COMMENT";
+					//Comments aren't added to the array of tokens,
+					while(asciiValue != 10) {
+						stringSpot++;
+						currentChar = input.charAt(stringSpot);
+						asciiValue = (int) currentChar;
+					}
+					currentToken = "";
+					currentTokenType = "";
+					continue;
 				}
 				else {
+					System.out.println("Invalid character");
+					System.out.println("Character: " + currentChar);
 					throw new LexicalException("Invalid character");
 				}
 
 			}
-
 			if(analyzeLexicalStructure(currentToken, currentChar, currentTokenType)) {
 				currentToken += currentChar;
-				if(currentTokenType.equals("IDENT")) {
-					//Check if currentToken is a reserved word
-
-				}
 			} else {
+				if((int) currentChar == 10) {
+					currLine++;
+					currColumn=0;
+				}
 				if(currentTokenType.equals("NUM_LIT")) {
-					System.out.println("NUM_LIT");
-					tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+					tokens.add(new INumLitImplementation(currentToken, currentTokenType, line, column));
+				} else if(currentTokenType.equals("IDENT")) {
+					//Check if currentToken is a reserved word
+					String[] reservedWords = {"image", "pixel", "int", "string", "void", "nil", "load","display","write",
+							"x","y","a","r","X","Y","Z","x_cart","y_cart","a_polar","r_polar","rand","sin","cos","atan","if","while"};
+					//check if currentToken is a reserved word
+					for(String reservedWord : reservedWords) {
+						if(currentToken.equals(reservedWord)) {
+							currentTokenType = "RES_" + reservedWord;
+							break;
+						}
+					}
+					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
+
 				} else {
-					tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+
+					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
+
 				}
 				currentToken = "";
 				currentTokenType = "";
@@ -153,15 +195,14 @@ class IScannerImplementation implements IScanner {
 				//add currentToken to the array of tokens
 				//reset currentToken to ""
 			}
-			System.out.println(currentToken);
 			stringSpot++;
-
 		}
 		//if token wasn't empty then add it to the array of tokens, otherwise just add EOF
 		if(!currentToken.isEmpty()) {
-			tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+			tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
 		}
 		tokens.add(new ITokenImplementation("","EOF",0,0));
+
 
 	}
 
