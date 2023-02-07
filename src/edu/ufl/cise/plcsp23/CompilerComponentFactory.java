@@ -10,6 +10,8 @@
 
 package edu.ufl.cise.plcsp23;
 
+import java.util.ArrayList;
+
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) throws LexicalException {
 		//Add statement to return an instance of your scanner
@@ -21,15 +23,15 @@ public class CompilerComponentFactory {
 
 class IScannerImplementation implements IScanner {
 	private int position = 0;
-	private IToken[] tokens = new IToken[0];
+	private ArrayList<IToken> tokens = new ArrayList<IToken>();
 	//Scanner has an array of ITokens, and a position variable for the next() method
 
 	@Override
 	public IToken next() throws LexicalException {
-		if(tokens.length == 0) {
+		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
 		} else {
-			return tokens[0];
+			return tokens.get(0);
 		}
 	}
 
@@ -38,8 +40,7 @@ class IScannerImplementation implements IScanner {
 	public IScannerImplementation(String in) throws LexicalException {
 		//check if input is empty or null
 		if(in == null || in.length() == 0) {
-			tokens = new IToken[1];
-			tokens[0] = new ITokenImplementation(input,"EOF",0,0);
+			tokens.add(new ITokenImplementation(input,"EOF",0,0));
 		}
 		input = in;
 		//Iterating over the input string character by character
