@@ -119,6 +119,15 @@ class IScannerImplementation implements IScanner {
 						//reset currentToken to ""
 					}
 				}
+				else if ((asciiValue < 91 && asciiValue > 64) || (asciiValue > 96 && asciiValue < 123) || asciiValue == 95) {
+					//A-Z, a-z, or _
+					//Beginning of an ident or reserved word
+					//Assume it's an ident until it matches the list of reserved words
+					currentTokenType = "IDENT";
+					currentToken += currentChar;
+
+
+				}
 				else {
 					throw new LexicalException("Invalid character");
 				}
@@ -127,6 +136,10 @@ class IScannerImplementation implements IScanner {
 
 			if(analyzeLexicalStructure(currentToken, currentChar, currentTokenType)) {
 				currentToken += currentChar;
+				if(currentTokenType.equals("IDENT")) {
+					//Check if currentToken is a reserved word
+
+				}
 			} else {
 				if(currentTokenType.equals("NUM_LIT")) {
 					System.out.println("NUM_LIT");
@@ -165,6 +178,16 @@ class IScannerImplementation implements IScanner {
 				return Character.isDigit(currentChar);
 			case "STRING_LIT":
 				break;
+			case "IDENT":
+				//check if currentChar is a digit, letter, or _
+				if(Character.isDigit(currentChar) || Character.isLetter(currentChar) || currentChar == '_') {
+					// valid character, so it's the same token
+					// There's the issue with reserved words but this is checked in the main method
+					return true;
+				} else {
+					//Non valid character, so it's a different token
+					return false;
+				}
 			default:
 				throw new LexicalException("Invalid token");
 		}
