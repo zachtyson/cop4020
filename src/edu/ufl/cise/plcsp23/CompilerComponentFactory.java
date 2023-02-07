@@ -10,7 +10,7 @@
 
 package edu.ufl.cise.plcsp23;
 
-import java.util.ArrayList;
+import java.util.*;
 
 import static edu.ufl.cise.plcsp23.IToken.Kind.NUM_LIT;
 
@@ -80,6 +80,7 @@ class IScannerImplementation implements IScanner {
 		int currLine = 1;
 		int currColumn = 0;
 		while(stringSpot < stringLength) {
+			System.out.println("Current character: " + input.charAt(stringSpot));
 			currColumn++;
 
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
@@ -89,7 +90,11 @@ class IScannerImplementation implements IScanner {
 			//check if currentToken + currentChar is a valid token, otherwise just use currentToken as a token
 			//if currentToken + currentChar is a valid token, then add currentChar to currentToken and increment stringSpot
 
-			//print ascii value of currentChar
+			//characters that can be operators:
+			// . | , | ? | : | ( | ) | < | > | [ | ] | { | } | = | == | <-> | <= | >= | ! | & | && | | | || |
+			// + | - | * | ** | / | %
+			//directly from LexicalStructure.pdf
+			int[] operatorChars = {46,44,63,58,40,41,60,62,91,93,123,125,61,45,61,33,38,43,45,42,47,37,124};
 
 			if(currentToken.isEmpty()) {
 				line = currLine;
@@ -161,6 +166,14 @@ class IScannerImplementation implements IScanner {
 					//So everything after the comment is ignored until a new line is reached
 					currentToken = "";
 					currentTokenType = "";
+					continue;
+				}
+				//else if asciiValue is in operators[]
+				else if(asciiValue == 61) {
+					//First character signifies this can be an operator
+					currentTokenType = "OPERATOR";
+					currentToken += currentChar;
+					stringSpot++;
 					continue;
 				}
 				else {
@@ -236,6 +249,17 @@ class IScannerImplementation implements IScanner {
 					//Non valid character, so it's a different token
 					return false;
 				}
+			case "OPERATOR"	:
+				//check if currentToken + currentChar is a valid operator
+				//if it is, then return true
+				//if it isn't, then return false
+				//List of operators: . , ? : ( ) < > [ ] { } = == <-> <= >= ! & && | || + 0 * ** / %
+				String[] operators = {".", ",", "?", ":", "(", ")", "<", ">", "[", "]", "{", "}", "=", "==", "<->", "<=", ">=", "!", "&", "&&", "|", "||", "+", "-", "*", "**", "/", "%"};
+				if(Arrays.asList(operators).contains(currentToken + currentChar)) {
+					return true;
+				} else {
+					return false;
+				}
 			default:
 				throw new LexicalException("Invalid token");
 		}
@@ -278,9 +302,76 @@ class ITokenImplementation implements IToken {
 
 	public ITokenImplementation(String t, String k, int x, int y) {
 		tokenString = t;
+		if(k == "OPERATOR") {
+			//call function for operator
+
+		}
 		kind = Kind.valueOf(k);
 		sourceLocation = new SourceLocation(x, y);
 	}
+
+	public static String getTokenOperatorEnum(String input) {
+		switch (input) {
+			case ".":
+				return "DOT";
+			case ",":
+				return "COMMA";
+			case "?":
+				return "QUESTION";
+			case ":":
+				return "COLON";
+			case "(":
+				return "LPAREN";
+			case ")":
+				return "RPAREN";
+			case "<":
+				return "LT";
+			case ">":
+				return "GT";
+			case "[":
+				return "LSQUARE";
+			case "]":
+				return "RSQUARE";
+			case "{":
+				return "LCURLY";
+			case "}":
+				return "RCURLY";
+			case "=":
+				return "ASSIGN";
+			case "==":
+				return "EQ";
+			case "<->":
+				return "EXCHANGE";
+			case "<=":
+				return "LE";
+			case ">=":
+				return "GE";
+			case "!":
+				return "BANG";
+			case "&":
+				return "BITAND";
+			case "&&":
+				return "AND";
+			case "|":
+				return "BITOR";
+			case "||":
+				return "OR";
+			case "+":
+				return "PLUS";
+			case "-":
+				return "MINUS";
+			case "*":
+				return "TIMES";
+			case "**":
+				return "EXP";
+			case "/":
+				return "DIV";
+			case "%":
+				return "MOD";
+		}
+		return "ERROR";
+	}
+
 }
 
 class INumLitImplementation implements INumLitToken {
@@ -324,3 +415,4 @@ class INumLitImplementation implements INumLitToken {
 		return tokenString;
 	}
 }
+
