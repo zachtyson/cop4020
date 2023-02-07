@@ -28,6 +28,10 @@ class IScannerImplementation implements IScanner {
 
 	@Override
 	public IToken next() throws LexicalException {
+		for(IToken token : tokens) {
+			System.out.println(token.getTokenString() + " " + token.getKind() );
+			System.out.println("XXX");
+		}
 		if(tokens.size() == 0) {
 			throw new LexicalException("No tokens");
 			//If there aren't any tokens, throw an exception
@@ -42,7 +46,8 @@ class IScannerImplementation implements IScanner {
 	public IScannerImplementation(String in) throws LexicalException {
 		//check if input is empty or null
 		if(in == null || in.length() == 0) {
-			tokens.add(new ITokenImplementation(input,"EOF",0,0));
+			tokens.add(new ITokenImplementation("","EOF",0,0));
+			return;
 		}
 		input = in;
 		//Iterating over the input string character by character
@@ -53,9 +58,10 @@ class IScannerImplementation implements IScanner {
 		int stringSpot = 0;
 		String currentToken = "";
 		String currentTokenType = "";
-		System.out.println(stringLength);
-		System.out.println(in);
+		int x = 0;
+		int y = 0;
 		while(stringSpot < stringLength) {
+			//print ascii value of currentChar
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
 			//And once I can't extend the token anymore, I'll add it to the array of tokens [not including the current character]
 			//e.g. for '0ada int' i would keep extending until I hit the space, catch the space, and then backtrack to the previous character
@@ -64,7 +70,7 @@ class IScannerImplementation implements IScanner {
 			//if currentToken + currentChar is a valid token, then add currentChar to currentToken and increment stringSpot
 
 			//print ascii value of currentChar
-			System.out.println((int) currentChar);
+
 			if(currentToken.isEmpty()) {
 				//If empty token, then try and figure out what currentChar can belong to
 				//e.g if currentChar is a number, then it's a NumLit, or if it's a letter then it can be an ident or a reserved word
@@ -79,26 +85,61 @@ class IScannerImplementation implements IScanner {
 				// I will move these if statements into a separate method, in the future, once I get things working
 				if(asciiValue == 48) { 	//0, but NOTE that since tokens that start with 0 are only valid if they are the only digit, I can essentially end this token here
 					currentToken += currentChar;
-					currentTokenType = "NumLit";
-					{
-						//todo: put stuff here for single digit 0
-					}
+					currentTokenType = "NUM_LIT";
+					tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+					currentToken = "";
+					currentTokenType = "";
+					stringSpot++;
+					continue;
 				} else if(asciiValue > 48 && asciiValue < 58) { //1-9, I do wish Java had support for ranges in switch statements
-					currentToken += currentChar;
-					currentTokenType = "NumLit";
+					currentTokenType = "NUM_LIT";
+				} else if (asciiValue == 32 || asciiValue == 10) { //spaces serve no purpose other than separating tokens, unless in a string literal
+					//New token unless in a string literal
+					if(currentTokenType.equals("STRING_LIT")) {
+						currentToken += currentChar;
+					} else {
+						//add currentToken to the array of tokens
+						if(currentTokenType.equals("NUM_LIT")) {
+							tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+						} else {
+							tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+						}
+						currentToken = "";
+						currentTokenType = "";
+						continue;
+						//reset currentToken to ""
+					}
 				} else {
 					throw new LexicalException("Invalid character");
 				}
+
 			}
-			if(analyzeLexicalStructure(currentToken, currentChar)) {
+
+			if(analyzeLexicalStructure(currentToken, currentChar, currentTokenType)) {
 				currentToken += currentChar;
-			}
-			else {
+			} else {
+				if(currentTokenType.equals("NUM_LIT")) {
+					System.out.println("NUM_LIT");
+					tokens.add(new INumLitImplementation(currentToken, currentTokenType, x, y));
+				} else {
+					tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+				}
+				currentToken = "";
+				currentTokenType = "";
+
 				//add currentToken to the array of tokens
 				//reset currentToken to ""
 			}
+			System.out.println(currentToken);
 			stringSpot++;
+
 		}
+		//if token wasn't empty then add it to the array of tokens, otherwise just add EOF
+		if(!currentToken.isEmpty()) {
+			tokens.add(new ITokenImplementation(currentToken, currentTokenType, x, y));
+		}
+		tokens.add(new ITokenImplementation("","EOF",0,0));
+
 	}
 
 	//function that parses the input string and checks if input + char is a valid token
@@ -106,7 +147,17 @@ class IScannerImplementation implements IScanner {
 	//if it isn't, then return false and don't add char to input
 	//WELL I forgot that Java doesn't have passing by reference, so I'll find another way to do this
 
-	private boolean analyzeLexicalStructure(String s, char c) {
+	private boolean analyzeLexicalStructure(String currentToken, char currentChar, String currentTokenType) throws LexicalException {
+
+		switch(currentTokenType) {
+			case "NUM_LIT":
+				//check if currentChar is a digit
+				return Character.isDigit(currentChar);
+			case "STRING_LIT":
+				break;
+			default:
+				throw new LexicalException("Invalid token");
+		}
 		return true;
 	}
 }
@@ -148,5 +199,47 @@ class ITokenImplementation implements IToken {
 		tokenString = t;
 		kind = Kind.valueOf(k);
 		sourceLocation = new SourceLocation(x, y);
+	}
+}
+
+class INumLitImplementation implements INumLitToken {
+	//Implementation of a NumLit token
+	//It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
+	private String tokenString;
+	private Kind kind;
+	private SourceLocation sourceLocation;
+
+	public INumLitImplementation(String t, String k, int x, int y){
+		tokenString = t;
+		kind = Kind.valueOf("NUM_LIT"); //It's always a NUM_LIT in this case
+		sourceLocation = new SourceLocation(x, y);
+		//try to parse the string as an integer
+
+	}
+
+
+	@Override
+	public int getValue() {
+		try {
+			return Integer.parseInt(tokenString);
+		} catch (NumberFormatException e) {
+			return -1;
+			//This is just for debugging, since the exceptions should be thrown in the next() method
+		}
+	}
+
+	@Override
+	public SourceLocation getSourceLocation() {
+		return sourceLocation;
+	}
+
+	@Override
+	public Kind getKind() {
+		return kind;
+	}
+
+	@Override
+	public String getTokenString() {
+		return tokenString;
 	}
 }
