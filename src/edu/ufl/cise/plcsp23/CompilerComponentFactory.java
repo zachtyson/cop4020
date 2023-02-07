@@ -32,6 +32,10 @@ class IScannerImplementation implements IScanner {
 	private String input;
 
 	public IScannerImplementation(String in) throws LexicalException {
+		//check if input is empty or null
+		if(in == null || in.length() == 0) {
+			tokens = new IToken[0];
+		}
 		input = in;
 		//Iterating over the input string character by character
 		//Increment i based on the next character and if it can be part of a token
@@ -40,6 +44,8 @@ class IScannerImplementation implements IScanner {
 		int stringLength = input.length();
 		int stringSpot = 0;
 		String currentToken = "";
+		System.out.println(stringLength);
+		System.out.println(in);
 		while(stringSpot < stringLength) {
 			//So I think here I'm going to check a character, see if it can be part of a token, and then increment the stringSpot
 			//And once I can't extend the token anymore, I'll add it to the array of tokens [not including the current character]
@@ -47,11 +53,28 @@ class IScannerImplementation implements IScanner {
 			char currentChar = input.charAt(stringSpot);
 			//check if currentToken + currentChar is a valid token, otherwise just use currentToken as a token
 			//if currentToken + currentChar is a valid token, then add currentChar to currentToken and increment stringSpot
+
+			//print ascii value of currentChar
+			System.out.println((int) currentChar);
+
+			if(analyzeLexicalStructure(currentToken, currentChar)) {
+				currentToken += currentChar;
+			}
+			else {
+				//add currentToken to the array of tokens
+				//reset currentToken to ""
+			}
 			stringSpot++;
 		}
+	}
 
+	//function that parses the input string and checks if input + char is a valid token
+	//if it is, then return true and add char to input
+	//if it isn't, then return false and don't add char to input
+	//WELL I forgot that Java doesn't have passing by reference, so I'll find another way to do this
 
-
+	private boolean analyzeLexicalStructure(String s, char c) {
+		return true;
 	}
 }
 
@@ -66,3 +89,31 @@ class IScannerImplementation implements IScanner {
 //A StringLit can contain any character except a double quote or a backslash unless it is preceded by a backslash
 //A String_Characters can be any character besides " or \ unless it is an escape sequence
 //The following are valid escape commands: \b, \t, \n, \r, \", \\
+
+class ITokenImplementation implements IToken {
+	private String tokenString;
+	private Kind kind;
+	private SourceLocation sourceLocation;
+
+
+	@Override
+	public SourceLocation getSourceLocation() {
+		return sourceLocation;
+	}
+
+	@Override
+	public Kind getKind() {
+		return kind;
+	}
+
+	@Override
+	public String getTokenString() {
+		return tokenString;
+	}
+
+	public ITokenImplementation(String s, Kind k, SourceLocation sl) {
+		tokenString = s;
+		kind = k;
+		sourceLocation = sl;
+	}
+}
