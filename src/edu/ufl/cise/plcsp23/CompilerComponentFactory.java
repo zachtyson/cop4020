@@ -18,3 +18,16 @@ public class CompilerComponentFactory {
 	}
 
 }
+
+
+
+//Multiple lines are inputted as a single string
+
+//A NumLit is a sequence of one or more digits, currently only non-negative integers are supported
+//A NumLit cannot start with 0 unless it is the only digit
+
+
+//A StringLit is a sequence of characters surrounded by double quotes
+//A StringLit can contain any character except a double quote or a backslash unless it is preceded by a backslash
+//A String_Characters can be any character besides " or \ unless it is an escape sequence
+//The following are valid escape commands: \b, \t, \n, \r, \", \\

@@ -19,6 +19,7 @@ public interface IScanner {
 	 * @throws LexicalException
 	 */
 	IToken next() throws LexicalException;
+	//So basically the tokens are stored as a list of ITokens, and the unit tests are checking one by one (using the next() method)
 
 }
 
