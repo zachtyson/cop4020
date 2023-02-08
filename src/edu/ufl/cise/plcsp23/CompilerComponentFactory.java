@@ -31,13 +31,6 @@ class IScannerImplementation implements IScanner {
 	@Override
 	public IToken next() throws LexicalException {
 		for(IToken token: tokens) {
-			System.out.println(token.getKind() + " " + token.getTokenString());
-
-
-		}
-		System.out.println();
-		System.out.println();
-		for(IToken token: tokens) {
 			if(token.getKind().equals(NUM_LIT)) {
 				try {
 					int val = Integer.parseInt(token.getTokenString());
@@ -210,10 +203,13 @@ class IScannerImplementation implements IScanner {
 					}
 					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
 
-				} else {
-
+				} else if(currentTokenType.equals("OPERATOR")) {
 					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
+					currentToken = "" + currentChar;
+					stringSpot--;
 
+				} else {
+					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
 				}
 				currentToken = "";
 				currentTokenType = "";
