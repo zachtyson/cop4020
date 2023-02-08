@@ -190,9 +190,11 @@ class IScannerImplementation implements IScanner {
 					currentToken += currentChar;
 				}
 				else {
-					System.out.println((int)currentChar);
-					System.out.println("Invalid character:" + currentChar + "at line " + line + " and column " + column);
-					throw new LexicalException("Invalid character");
+					//If it's not a valid character, create an error token
+					currentTokenType = "ERROR";
+					currentToken += currentChar;
+					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
+					return;
 				}
 
 			}
