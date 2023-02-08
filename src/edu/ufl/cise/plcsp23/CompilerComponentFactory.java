@@ -188,6 +188,11 @@ class IScannerImplementation implements IScanner {
 				} else if (asciiValue == 9 || asciiValue == 11 || asciiValue == 12 || asciiValue == 13) {
 					currentTokenType = "ESCAPE";
 					currentToken += currentChar;
+				} else if (asciiValue == 34) { //This is a double quote and signifies the beginning of a string literal
+					currentTokenType = "STRING_LIT";
+					currentToken += currentChar;
+					stringSpot++;
+					continue;
 				}
 				else {
 					//If it's not a valid character, create an error token
@@ -233,6 +238,12 @@ class IScannerImplementation implements IScanner {
 					//For now it's just ignored
 					currentToken = "";
 					currentTokenType = "";
+				} else if(currentTokenType.equals("STRING_LIT")) {
+					currentToken += "\"";
+					tokens.add(new IStringLitImplementation(currentToken, currentTokenType, line, column));
+					currentToken = "";
+					currentTokenType = "";
+
 				}
 				else {
 					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
@@ -266,7 +277,22 @@ class IScannerImplementation implements IScanner {
 				//check if currentChar is a digit
 				return Character.isDigit(currentChar);
 			case "STRING_LIT":
-				break;
+				//Allow any character except for a double quote (unless it's an escape sequence)
+				//If it's an escape sequence, then it's a valid character
+				//If it's a double quote, then it's the end of the string literal
+				if(currentChar == '"') {
+					//check the last of the currentToken to see if it's a backslash
+					//if it is, then it's a valid string literal
+					//if it isn't, then it's the end of the string literal
+					if(currentToken.charAt(currentToken.length()-1) == '\\') {
+						return true;
+					} else {
+						return false;
+					}
+
+				} else {
+					return true;
+				}
 			case "IDENT":
 				//check if currentChar is a digit, letter, or _
 				if(Character.isDigit(currentChar) || Character.isLetter(currentChar) || currentChar == '_') {
@@ -301,7 +327,6 @@ class IScannerImplementation implements IScanner {
 			default:
 				throw new LexicalException("Invalid token");
 		}
-		return true;
 	}
 
 	public boolean doesArrayContain(String[] array, String string) {
@@ -445,3 +470,50 @@ class INumLitImplementation implements INumLitToken {
 	}
 }
 
+class IStringLitImplementation implements IStringLitToken {
+	//Implementation of a StringLit token
+	//It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
+	private String tokenString;
+	private String value;
+	private Kind kind;
+	private SourceLocation sourceLocation;
+
+	public IStringLitImplementation(String t, String k, int x, int y){
+		tokenString = t;
+		kind = Kind.valueOf("STRING_LIT"); //It's always a STRING_LIT in this case
+		sourceLocation = new SourceLocation(x, y);
+
+		//remove first and last character
+		value = tokenString.substring(1, tokenString.length() - 1);
+		//replace escape sequences with their actual values
+		value = value.replace("\\b", "\b");
+		value = value.replace("\\t", "\t");
+		value = value.replace("\\n", "\n");
+		value = value.replace("\\r", "\r");
+		value = value.replace("\\\"", "\"");
+		value = value.replace("\\\\", "\\");
+		//honestly not really sure how this works LMAO
+
+	}
+
+	@Override
+	public String getValue() {
+		return value;
+		//returns the actual literal value of the string
+	}
+
+	@Override
+	public SourceLocation getSourceLocation() {
+		return sourceLocation;
+	}
+
+	@Override
+	public Kind getKind() {
+		return kind;
+	}
+
+	@Override
+	public String getTokenString() {
+		return tokenString;
+	}
+}
