@@ -180,9 +180,18 @@ class IScannerImplementation implements IScanner {
 					currentToken += currentChar;
 					stringSpot++;
 					continue;
+				} else if(asciiValue == 92) {
+					//92 in ASCII is a backslash, which is used to escape characters
+					//Backslashes will only be used for whitespace or in string literals
+					currentTokenType = "ESCAPE";
+					currentToken += currentChar;
+				} else if (asciiValue == 9 || asciiValue == 11 || asciiValue == 12 || asciiValue == 13) {
+					currentTokenType = "ESCAPE";
+					currentToken += currentChar;
 				}
 				else {
-
+					System.out.println((int)currentChar);
+					System.out.println("Invalid character:" + currentChar + "at line " + line + " and column " + column);
 					throw new LexicalException("Invalid character");
 				}
 
@@ -214,7 +223,16 @@ class IScannerImplementation implements IScanner {
 					currentToken = "" + currentChar;
 					stringSpot--;
 
-				} else {
+				} else if (currentTokenType.equals("ESCAPE")) {
+					//If it's a backslash + whitespace, then it's a whitespace escape
+					//If it's not a whitespace escape, then we seem to have an invalid escape sequence
+					//Not really sure how to handle invalid escapes
+					//I can either ignore them or make an error token but I'm not sure
+					//For now it's just ignored
+					currentToken = "";
+					currentTokenType = "";
+				}
+				else {
 					tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
 				}
 				currentToken = "";
@@ -264,6 +282,16 @@ class IScannerImplementation implements IScanner {
 				//List of operators: . , ? : ( ) < > [ ] { } = == <-> <= >= ! & && | || + 0 * ** / %
 				String[] operators = {".", ",", "?", ":", "(", ")", "<", ">", "[", "]", "{", "}", "=", "==", "<->", "<=", ">=", "!", "&", "&&", "|", "||", "+", "-", "*", "**", "/", "%"};
 				if(doesArrayContain(operators, currentToken + currentChar)) {
+					return true;
+				} else {
+					return false;
+				}
+			case "ESCAPE":
+				//check if currentChar is a whitespace character
+				//if it is, then return true
+				//if it isn't, then return false
+				String[] whitespaceChars = {"b","t","n","r", "\"", "\\"};
+				if(doesArrayContain(whitespaceChars, currentToken + currentChar)) {
 					return true;
 				} else {
 					return false;
