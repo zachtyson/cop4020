@@ -270,7 +270,8 @@ class IScannerImplementation implements IScanner {
 
 	public boolean doesArrayContain(String[] array, String string) {
 		for(String element : array) {
-			if(element.equals(string)) {
+			//if string is a substring of element, then return true
+			if(element.contains(string)) {
 				return true;
 			}
 		}
