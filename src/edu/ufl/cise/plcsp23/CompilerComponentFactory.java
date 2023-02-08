@@ -13,6 +13,7 @@ package edu.ufl.cise.plcsp23;
 import java.util.*;
 
 import static edu.ufl.cise.plcsp23.IToken.Kind.NUM_LIT;
+import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
 
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) throws LexicalException {
@@ -31,6 +32,7 @@ class IScannerImplementation implements IScanner {
 	@Override
 	public IToken next() throws LexicalException {
 		for(IToken token: tokens) {
+			System.out.println(token.getTokenString() + " " + token.getKind());
 			if(token.getKind().equals(NUM_LIT)) {
 				try {
 					int val = Integer.parseInt(token.getTokenString());
@@ -51,8 +53,12 @@ class IScannerImplementation implements IScanner {
 			} else {
 				tokenToReturn = tokens.get(position-1);
 			}
-			//Check if the token is a numLit token, and if so, check if it's in the range of an integer
+
+			if(tokenToReturn.getKind().equals(valueOf("ERROR"))) {
+				throw new LexicalException("Invalid operator");
+			}
 			return tokenToReturn;
+
 
 			//Otherwise return the token at the current position and increment the position
 		}
