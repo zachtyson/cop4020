@@ -16,9 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
-import edu.ufl.cise.plcsp23.exceptions.PLCException;
-import edu.ufl.cise.plcsp23.exceptions.SyntaxException;
+
 import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;

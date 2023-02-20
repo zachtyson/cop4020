@@ -1,14 +1,12 @@
 package edu.ufl.cise.plcsp23.implementation;
 
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
-import edu.ufl.cise.plcsp23.exceptions.SyntaxException;
+import edu.ufl.cise.plcsp23.LexicalException;
+import edu.ufl.cise.plcsp23.SyntaxException;
 import edu.ufl.cise.plcsp23.interfaces.IParser;
-import edu.ufl.cise.plcsp23.exceptions.PLCException;
+import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.AST;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
@@ -38,7 +36,7 @@ public class IParserImplementation implements IParser {
         //Pass the input to the scanner
         while (true) {
             try {
-
+                throw new SyntaxException("Not yet implemented");
             } catch (Exception e) {
                 if(e.getMessage().equals("Number out of bounds")) {
                     throw new SyntaxException("Number out of bounds");

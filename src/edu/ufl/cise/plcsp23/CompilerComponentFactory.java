@@ -10,8 +10,6 @@
 
 package edu.ufl.cise.plcsp23;
 
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
-import edu.ufl.cise.plcsp23.exceptions.PLCException;
 import edu.ufl.cise.plcsp23.implementation.IParserImplementation;
 import edu.ufl.cise.plcsp23.implementation.IScannerImplementation;
 import edu.ufl.cise.plcsp23.interfaces.IParser;

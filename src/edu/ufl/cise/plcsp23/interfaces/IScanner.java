@@ -11,7 +11,7 @@
 package edu.ufl.cise.plcsp23.interfaces;
 
 import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
+import edu.ufl.cise.plcsp23.LexicalException;
 
 public interface IScanner {
 	/**

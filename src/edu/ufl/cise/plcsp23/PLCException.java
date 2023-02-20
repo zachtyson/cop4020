@@ -8,7 +8,7 @@
  * This code may not be posted on a public web site either during or after the course.
  */
 
-package edu.ufl.cise.plcsp23.exceptions;
+package edu.ufl.cise.plcsp23;
 
 public class PLCException extends Exception {
 

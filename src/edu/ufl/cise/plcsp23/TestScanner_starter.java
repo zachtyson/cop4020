@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
 import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
 import edu.ufl.cise.plcsp23.interfaces.IScanner;
 import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;

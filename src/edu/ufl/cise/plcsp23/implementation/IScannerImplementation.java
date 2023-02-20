@@ -2,7 +2,7 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.interfaces.IScanner;
 import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
+import edu.ufl.cise.plcsp23.LexicalException;
 
 import java.util.ArrayList;
 

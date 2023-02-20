@@ -5,7 +5,7 @@ package edu.ufl.cise.plcsp23.implementation;
 //The following are valid escape commands: \b, \t, \n, \r, \", \\
 
 import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;
-import edu.ufl.cise.plcsp23.exceptions.LexicalException;
+import edu.ufl.cise.plcsp23.LexicalException;
 
 public class IStringLitImplementation implements IStringLitToken {
     //Implementation of a StringLit token
