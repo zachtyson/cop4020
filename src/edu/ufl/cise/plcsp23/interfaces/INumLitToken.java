@@ -8,7 +8,7 @@
  * This code may not be posted on a public web site either during or after the course.
  */
 
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.interfaces;
 
 public interface INumLitToken extends IToken {
 

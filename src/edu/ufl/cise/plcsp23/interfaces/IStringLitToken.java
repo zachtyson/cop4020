@@ -9,7 +9,7 @@
  */
 
 
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.interfaces;
 
 public interface IStringLitToken extends IToken {
 

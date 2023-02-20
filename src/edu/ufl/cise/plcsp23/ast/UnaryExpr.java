@@ -1,26 +1,26 @@
 /*Copyright 2023 by Beverly A Sanders
- * 
- * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the 
- * University of Florida during the spring semester 2023 as part of the course project.  
- * 
- * No other use is authorized. 
- * 
- * This code may not be posted on a public web site either during or after the course.  
+ *
+ * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the
+ * University of Florida during the spring semester 2023 as part of the course project.
+ *
+ * No other use is authorized.
+ *
+ * This code may not be posted on a public web site either during or after the course.
  */
 
 package edu.ufl.cise.plcsp23.ast;
 
 import java.util.Objects;
 
-import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.PLCException;
-import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.exceptions.PLCException;
+import edu.ufl.cise.plcsp23.interfaces.IToken.Kind;
 
 public class UnaryExpr extends Expr {
-	
+
 	final Kind op;
-	final Expr e;	
-	
+	final Expr e;
+
 	public UnaryExpr(IToken firstToken, Kind op, Expr e) {
 		super(firstToken);
 		this.op = op;
@@ -32,7 +32,7 @@ public class UnaryExpr extends Expr {
 		return v.visitUnaryExpr(this,arg);
 	}
 
-	
+
 	public Kind getOp() {
 		return op;
 	}
@@ -41,7 +41,7 @@ public class UnaryExpr extends Expr {
 		return e;
 	}
 
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

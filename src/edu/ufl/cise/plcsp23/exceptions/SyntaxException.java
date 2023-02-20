@@ -1,4 +1,4 @@
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.exceptions;
 
 @SuppressWarnings("serial")
 public class SyntaxException extends PLCException {

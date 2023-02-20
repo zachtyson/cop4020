@@ -1,11 +1,15 @@
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.implementation;
+
+import edu.ufl.cise.plcsp23.interfaces.IScanner;
+import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.exceptions.LexicalException;
 
 import java.util.ArrayList;
 
-import static edu.ufl.cise.plcsp23.IToken.Kind.NUM_LIT;
-import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
+import static edu.ufl.cise.plcsp23.interfaces.IToken.Kind.NUM_LIT;
+import static edu.ufl.cise.plcsp23.interfaces.IToken.Kind.valueOf;
 
-class IScannerImplementation implements IScanner {
+public class IScannerImplementation implements IScanner {
     private int position = 0;
     private ArrayList<IToken> tokens = new ArrayList<IToken>();
     //Scanner has an array of ITokens, and a position variable for the next() method

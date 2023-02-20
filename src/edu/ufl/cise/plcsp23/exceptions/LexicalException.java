@@ -8,20 +8,12 @@
  * This code may not be posted on a public web site either during or after the course.
  */
 
-package edu.ufl.cise.plcsp23.ast;
+package edu.ufl.cise.plcsp23.exceptions;
 
-import edu.ufl.cise.plcsp23.interfaces.IToken;
-import edu.ufl.cise.plcsp23.exceptions.PLCException;
+@SuppressWarnings("serial")
+public class LexicalException extends PLCException {
 
-public class RandomExpr extends Expr{
-
-	public RandomExpr(IToken firstToken) {
-		super(firstToken);
+	public LexicalException(String message) {
+		super(message);
 	}
-
-	@Override
-	public Object visit(ASTVisitor v, Object arg) throws PLCException {
-		return v.visitRandomExpr(this, arg);
-	}
-
 }

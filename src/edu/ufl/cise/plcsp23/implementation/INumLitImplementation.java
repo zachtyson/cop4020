@@ -1,10 +1,12 @@
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.implementation;
 //Multiple lines are inputted as a single string
 
 //A NumLit is a sequence of one or more digits, currently only non-negative integers are supported
 //A NumLit cannot start with 0 unless it is the only digit
 
-class INumLitImplementation implements INumLitToken {
+import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
+
+public class INumLitImplementation implements INumLitToken {
     //Implementation of a NumLit token
     //It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
     private String tokenString;

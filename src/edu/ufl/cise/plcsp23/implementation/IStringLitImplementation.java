@@ -1,10 +1,13 @@
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.implementation;
 //A StringLit is a sequence of characters surrounded by double quotes
 //A StringLit can contain any character except a double quote or a backslash unless it is preceded by a backslash
 //A String_Characters can be any character besides " or \ unless it is an escape sequence
 //The following are valid escape commands: \b, \t, \n, \r, \", \\
 
-class IStringLitImplementation implements IStringLitToken {
+import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;
+import edu.ufl.cise.plcsp23.exceptions.LexicalException;
+
+public class IStringLitImplementation implements IStringLitToken {
     //Implementation of a StringLit token
     //It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
     private String tokenString;

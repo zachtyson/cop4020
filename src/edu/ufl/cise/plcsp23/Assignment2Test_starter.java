@@ -1,11 +1,11 @@
 /*Copyright 2023 by Beverly A Sanders
- * 
- * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the 
- * University of Florida during the spring semester 2023 as part of the course project.  
- * 
- * No other use is authorized. 
- * 
- * This code may not be posted on a public web site either during or after the course.  
+ *
+ * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the
+ * University of Florida during the spring semester 2023 as part of the course project.
+ *
+ * No other use is authorized.
+ *
+ * This code may not be posted on a public web site either during or after the course.
  */
 
 package edu.ufl.cise.plcsp23;
@@ -16,9 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import edu.ufl.cise.plcsp23.exceptions.LexicalException;
+import edu.ufl.cise.plcsp23.exceptions.PLCException;
+import edu.ufl.cise.plcsp23.exceptions.SyntaxException;
 import org.junit.jupiter.api.Test;
 
-import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.interfaces.IToken.Kind;
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.BinaryExpr;
 import edu.ufl.cise.plcsp23.ast.ConditionalExpr;
@@ -32,14 +35,14 @@ import edu.ufl.cise.plcsp23.ast.ZExpr;
 
 
 class Assignment2Test_starter {
-	
-	
+
+
 	/** Indicates whether show should generate output*/
 	static final boolean VERBOSE = true;
 
 	/**
-	 * Prints obj to console if VERBOSE.  This is easier to type than System.out.println and makes it easy to disable output. 
-	 * 
+	 * Prints obj to console if VERBOSE.  This is easier to type than System.out.println and makes it easy to disable output.
+	 *
 	 * @param obj
 	 */
 	void show(Object obj) {
@@ -47,9 +50,9 @@ class Assignment2Test_starter {
 			System.out.println(obj);
 		}
 	}
-	
-	/** Constructs a scanner and parser for the given input string, scans and parses the input and returns and AST. 
-	 * 
+
+	/** Constructs a scanner and parser for the given input string, scans and parses the input and returns and AST.
+	 *
 	 * @param input   String representing program to be tested
 	 * @return  AST representing the program
 	 * @throws PLCException
@@ -57,10 +60,10 @@ class Assignment2Test_starter {
 	AST getAST(String input) throws  PLCException {
 		return  CompilerComponentFactory.makeAssignment2Parser(input).parse();
 	}
-	
+
 	/**
 	 * Checks that the given AST e has type NumLitExpr with the indicated value.  Returns the given AST cast to NumLitExpr.
-	 * 
+	 *
 	 * @param e
 	 * @param value
 	 * @return
@@ -71,11 +74,11 @@ class Assignment2Test_starter {
 		assertEquals(value, ne.getValue());
 		return ne;
 	}
-	
+
 	/**
 	 *  Checks that the given AST e has type StringLitExpr with the given String value.  Returns the given AST cast to StringLitExpr.
 	 * @param e
-	 * @param name
+	 * @param "name"
 	 * @return
 	 */
 	StringLitExpr checkStringLit(AST e, String value) {
@@ -84,7 +87,7 @@ class Assignment2Test_starter {
 		assertEquals(value,se.getValue());
 		return se;
 	}
-	
+
 	/**
 	 *  Checks that the given AST e has type UnaryExpr with the given operator.  Returns the given AST cast to UnaryExpr.
 	 * @param e
@@ -97,7 +100,7 @@ class Assignment2Test_starter {
 		return (UnaryExpr)e;
 	}
 
-	
+
 	/**
 	 *  Checks that the given AST e has type ConditionalExpr.  Returns the given AST cast to ConditionalExpr.
 	 * @param e
@@ -107,12 +110,12 @@ class Assignment2Test_starter {
 		assertThat("",e, instanceOf( ConditionalExpr.class));
 		return (ConditionalExpr)e;
 	}
-	
+
 	/**
 	 *  Checks that the given AST e has type BinaryExpr with the given operator.  Returns the given AST cast to BinaryExpr.
-	 *  
-	 * @param e
-	 * @param op  Kind of expected operator
+	 *
+	 * @param "e"
+	 * @param "op"  Kind of expected operator
 	 * @return
 	 */
 	BinaryExpr checkBinary(AST e, Kind expectedOp) {
@@ -121,7 +124,7 @@ class Assignment2Test_starter {
 		assertEquals(expectedOp, be.getOp());
 		return be;
 	}
-	
+
 /**
  * Checks that the given AST e has type IdentExpr with the given name.  Returns the given AST cast to IdentExpr.
  * @param e
@@ -132,9 +135,9 @@ class Assignment2Test_starter {
 		assertThat("",e, instanceOf( IdentExpr.class));
 		IdentExpr ident = (IdentExpr)e;
 		assertEquals(name,ident.getName());
-		return ident;		
+		return ident;
 	}
-		
+
 	@Test
 	void emptyProgram() throws PLCException {
 		String input = "";  //no empty expressions, this program should throw a SyntaxException
@@ -142,26 +145,26 @@ class Assignment2Test_starter {
 			getAST(input);
 		});
 	}
-	
+
 	@Test
 	void numLit() throws PLCException {
 		String input= "3";
 		checkNumLit(getAST(input),3);
 	}
-	
+
 	@Test
 	void stringLit() throws PLCException {
 		String input= "\"Go Gators\" ";
 		checkStringLit(getAST(input), "Go Gators");
 	}
-	
-	@Test 
+
+	@Test
 	void Z() throws PLCException {
 		String input = " Z  ";
 		AST e = getAST(input);
 		assertThat("",e, instanceOf( ZExpr.class));
 	}
-	
+
 	@Test
 	void rand() throws PLCException {
 		String input = "  rand";
@@ -170,18 +173,18 @@ class Assignment2Test_starter {
 		assertEquals(3, e.getColumn());
 		assertThat("",e, instanceOf( RandomExpr.class));
 	}
-	
+
 	@Test
 	void primary() throws PLCException {
 		String input = " (3) ";
 		Expr e = (Expr) getAST(input);
 		checkNumLit(e,3);
 	}
-	
+
 
 
 @Test
-void unary1() 
+void unary1()
 	throws PLCException {
 		String input = " -3 ";
 		UnaryExpr ue = checkUnary(getAST(input), Kind.MINUS);
@@ -191,13 +194,13 @@ void unary1()
 
 
 @Test
-void unary2() 
+void unary2()
 	throws PLCException {
-		String input = " cos atan ! - \"hello\" ";	
+		String input = " cos atan ! - \"hello\" ";
 		UnaryExpr ue0 = checkUnary(getAST(input), Kind.RES_cos);
 		UnaryExpr ue1 = checkUnary(ue0.getE(), Kind.RES_atan);
 		UnaryExpr ue2 = checkUnary(ue1.getE(),Kind.BANG);
-		UnaryExpr ue3 = checkUnary(ue2.getE(), Kind.MINUS);	
+		UnaryExpr ue3 = checkUnary(ue2.getE(), Kind.MINUS);
 		checkStringLit(ue3.getE(), "hello");
 	}
 
@@ -226,7 +229,7 @@ void unary2()
 
 	BinaryExpr be0rl = checkBinary(be0r.getLeft(),Kind.DIV );  //(3*4)/5
 	checkNumLit(be0rl.getRight(),5);  // 5
-		
+
     BinaryExpr be0rll = checkBinary(be0rl.getLeft(), Kind.TIMES); // 3*4
 	checkNumLit(be0rll.getLeft(),3);
 	checkNumLit(be0rll.getRight(),4);
@@ -250,15 +253,15 @@ void unary2()
 	ConditionalExpr guard = checkConditional(ce.getGuard());
 	ConditionalExpr trueCase = checkConditional(ce.getTrueCase());
 	ConditionalExpr falseCase = checkConditional(ce.getFalseCase());
-	
+
 	checkNumLit(guard.getGuard(),3);
 	checkNumLit(guard.getTrueCase(),4);
 	checkNumLit(guard.getFalseCase(),5);
-	
+
 	checkNumLit(trueCase.getGuard(),6);
 	checkNumLit(trueCase.getTrueCase(),7);
 	checkNumLit(trueCase.getFalseCase(),8);
-	
+
 	checkNumLit(falseCase.getGuard(),9);
 	checkNumLit(falseCase.getTrueCase(),10);
 	checkNumLit(falseCase.getFalseCase(),11);
