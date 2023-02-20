@@ -10,7 +10,7 @@
 
 package edu.ufl.cise.plcsp23.ast;
 
-import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;
+import edu.ufl.cise.plcsp23.IStringLitToken;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 

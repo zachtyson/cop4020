@@ -8,7 +8,7 @@
  * This code may not be posted on a public web site either during or after the course.
  */
 
-package edu.ufl.cise.plcsp23.interfaces;
+package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.IToken;
 

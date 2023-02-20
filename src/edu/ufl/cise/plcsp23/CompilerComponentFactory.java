@@ -12,8 +12,6 @@ package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.implementation.IParserImplementation;
 import edu.ufl.cise.plcsp23.implementation.IScannerImplementation;
-import edu.ufl.cise.plcsp23.interfaces.IParser;
-import edu.ufl.cise.plcsp23.interfaces.IScanner;
 
 import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
 

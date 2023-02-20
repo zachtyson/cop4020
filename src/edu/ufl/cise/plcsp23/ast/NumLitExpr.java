@@ -10,7 +10,7 @@
 
 package edu.ufl.cise.plcsp23.ast;
 
-import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
+import edu.ufl.cise.plcsp23.INumLitToken;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 

@@ -1,4 +1,4 @@
-package edu.ufl.cise.plcsp23.interfaces;
+package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.AST;

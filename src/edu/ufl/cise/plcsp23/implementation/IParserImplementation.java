@@ -2,7 +2,7 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.LexicalException;
 import edu.ufl.cise.plcsp23.SyntaxException;
-import edu.ufl.cise.plcsp23.interfaces.IParser;
+import edu.ufl.cise.plcsp23.IParser;
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.AST;
 

@@ -4,7 +4,7 @@ package edu.ufl.cise.plcsp23.implementation;
 //A String_Characters can be any character besides " or \ unless it is an escape sequence
 //The following are valid escape commands: \b, \t, \n, \r, \", \\
 
-import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;
+import edu.ufl.cise.plcsp23.IStringLitToken;
 import edu.ufl.cise.plcsp23.LexicalException;
 
 public class IStringLitImplementation implements IStringLitToken {

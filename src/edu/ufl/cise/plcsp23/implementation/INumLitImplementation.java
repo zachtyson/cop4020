@@ -4,7 +4,7 @@ package edu.ufl.cise.plcsp23.implementation;
 //A NumLit is a sequence of one or more digits, currently only non-negative integers are supported
 //A NumLit cannot start with 0 unless it is the only digit
 
-import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
+import edu.ufl.cise.plcsp23.INumLitToken;
 
 public class INumLitImplementation implements INumLitToken {
     //Implementation of a NumLit token
