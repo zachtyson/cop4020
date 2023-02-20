@@ -1,6 +1,6 @@
 package edu.ufl.cise.plcsp23.implementation;
 
-import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.IToken;
 
 public class ITokenImplementation implements IToken {
     private String tokenString;

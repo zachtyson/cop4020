@@ -21,7 +21,7 @@ import edu.ufl.cise.plcsp23.exceptions.PLCException;
 import edu.ufl.cise.plcsp23.exceptions.SyntaxException;
 import org.junit.jupiter.api.Test;
 
-import edu.ufl.cise.plcsp23.interfaces.IToken.Kind;
+import edu.ufl.cise.plcsp23.IToken.Kind;
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.BinaryExpr;
 import edu.ufl.cise.plcsp23.ast.ConditionalExpr;

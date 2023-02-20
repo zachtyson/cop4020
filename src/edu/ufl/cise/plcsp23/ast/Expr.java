@@ -10,7 +10,7 @@
 
 package edu.ufl.cise.plcsp23.ast;
 
-import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.IToken;
 
 public abstract class Expr extends AST {
 

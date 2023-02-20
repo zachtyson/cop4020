@@ -11,7 +11,7 @@
 package edu.ufl.cise.plcsp23.ast;
 
 import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
-import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.exceptions.PLCException;
 
 public class NumLitExpr extends Expr {

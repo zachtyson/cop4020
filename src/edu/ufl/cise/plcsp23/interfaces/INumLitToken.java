@@ -10,6 +10,8 @@
 
 package edu.ufl.cise.plcsp23.interfaces;
 
+import edu.ufl.cise.plcsp23.IToken;
+
 public interface INumLitToken extends IToken {
 
 	int getValue();

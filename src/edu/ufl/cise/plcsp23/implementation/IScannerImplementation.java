@@ -1,13 +1,13 @@
 package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.interfaces.IScanner;
-import edu.ufl.cise.plcsp23.interfaces.IToken;
+import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.exceptions.LexicalException;
 
 import java.util.ArrayList;
 
-import static edu.ufl.cise.plcsp23.interfaces.IToken.Kind.NUM_LIT;
-import static edu.ufl.cise.plcsp23.interfaces.IToken.Kind.valueOf;
+import static edu.ufl.cise.plcsp23.IToken.Kind.NUM_LIT;
+import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
 
 public class IScannerImplementation implements IScanner {
     private int position = 0;

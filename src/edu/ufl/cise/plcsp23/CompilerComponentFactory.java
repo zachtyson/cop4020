@@ -17,7 +17,7 @@ import edu.ufl.cise.plcsp23.implementation.IScannerImplementation;
 import edu.ufl.cise.plcsp23.interfaces.IParser;
 import edu.ufl.cise.plcsp23.interfaces.IScanner;
 
-import static edu.ufl.cise.plcsp23.interfaces.IToken.Kind.valueOf;
+import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
 
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) throws LexicalException {

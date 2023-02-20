@@ -18,11 +18,10 @@ import edu.ufl.cise.plcsp23.exceptions.LexicalException;
 import edu.ufl.cise.plcsp23.interfaces.INumLitToken;
 import edu.ufl.cise.plcsp23.interfaces.IScanner;
 import edu.ufl.cise.plcsp23.interfaces.IStringLitToken;
-import edu.ufl.cise.plcsp23.interfaces.IToken;
 import org.junit.jupiter.api.Test;
 
-import edu.ufl.cise.plcsp23.interfaces.IToken.Kind;
-import edu.ufl.cise.plcsp23.interfaces.IToken.SourceLocation;
+import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.IToken.SourceLocation;
 
 class TestScanner_starter {
 
