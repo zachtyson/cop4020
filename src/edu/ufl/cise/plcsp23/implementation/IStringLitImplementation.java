@@ -7,7 +7,7 @@ package edu.ufl.cise.plcsp23.implementation;
 import edu.ufl.cise.plcsp23.IStringLitToken;
 import edu.ufl.cise.plcsp23.LexicalException;
 
-public class IStringLitImplementation implements IStringLitToken {
+public class IStringLitImplementation extends ITokenImplementation implements IStringLitToken {
     //Implementation of a StringLit token
     //It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
     private String tokenString;

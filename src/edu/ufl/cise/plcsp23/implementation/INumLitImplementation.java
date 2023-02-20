@@ -6,7 +6,7 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.INumLitToken;
 
-public class INumLitImplementation implements INumLitToken {
+public class INumLitImplementation extends ITokenImplementation implements INumLitToken {
     //Implementation of a NumLit token
     //It's basically identical to a regular token, but it has a getValue() method which doesn't exist in IToken
     private String tokenString;

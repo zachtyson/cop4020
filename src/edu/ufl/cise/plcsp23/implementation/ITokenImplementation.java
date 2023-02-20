@@ -2,7 +2,7 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.IToken;
 
-public class ITokenImplementation implements IToken {
+public class ITokenImplementation implements IToken  {
     private String tokenString;
     private Kind kind;
     private SourceLocation sourceLocation;
@@ -65,6 +65,13 @@ public class ITokenImplementation implements IToken {
             case "%" -> "MOD";
             default -> "ERROR";
         };
+    }
+
+    //Default constructor
+    public ITokenImplementation() {
+        tokenString = "";
+        kind = Kind.ERROR;
+        sourceLocation = new SourceLocation(0, 0);
     }
 
 }
