@@ -84,7 +84,6 @@ public class IScannerImplementation implements IScanner {
             // + | - | * | ** | / | %
             //directly from LexicalStructure.pdf
             int[] operatorChars = {46, 44, 63, 58, 40, 41, 60, 62, 91, 93, 123, 125, 61, 45, 61, 33, 38, 43, 45, 42, 47, 37, 124};
-
             if (currentToken.isEmpty()) {
                 line = currLine;
                 column = currColumn;
@@ -205,7 +204,14 @@ public class IScannerImplementation implements IScanner {
                             break;
                         }
                     }
+                    currColumn = currColumn -2;
+                    //check if stringSpot++ is out of bounds
+                    if((int)currentChar == 10) {
+
+                        currLine--;
+                    }
                     tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
+                    stringSpot--;
 
                 } else if (currentTokenType.equals("OPERATOR")) {
                     tokens.add(new ITokenImplementation(currentToken, currentTokenType, line, column));
