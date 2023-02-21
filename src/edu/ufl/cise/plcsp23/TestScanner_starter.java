@@ -248,4 +248,22 @@ class TestScanner_starter {
 		});
 	}
 
+	@Test
+	void math1() throws LexicalException {
+		String input = """
+				ab+b-c*d/e
+				""";
+
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkToken(Kind.IDENT,"ab", new SourceLocation(1,1), scanner.next());
+		checkToken(Kind.PLUS, scanner.next());
+		checkToken(Kind.IDENT,"b", new SourceLocation(1,4), scanner.next());
+		checkToken(Kind.MINUS, scanner.next());
+		checkToken(Kind.IDENT,"c", new SourceLocation(1,6), scanner.next());
+		checkToken(Kind.TIMES, scanner.next());
+		checkToken(Kind.IDENT,"d", new SourceLocation(1,8), scanner.next());
+		checkToken(Kind.DIV, scanner.next());
+		checkToken(Kind.IDENT,"e", new SourceLocation(1,10), scanner.next());
+		checkEOF(scanner.next());
+	}
 }
