@@ -48,6 +48,7 @@ public class IParserImplementation implements IParser {
         }
         //Iterate over tokenList print out each token
         parseExpr(tokenList);
+        compressAST();
 
 
 
@@ -55,7 +56,7 @@ public class IParserImplementation implements IParser {
 
     boolean parseExpr(ArrayList<IToken> tokenList) throws PLCException {
         if(tokenList.size() == 0) {
-           throw new SyntaxException("No tokens to parse");
+            throw new SyntaxException("No tokens to parse");
         }
         for (IToken iToken : tokenList) {
             IToken.Kind kind = iToken.getKind();
@@ -115,6 +116,8 @@ public class IParserImplementation implements IParser {
     boolean compressAST() throws PLCException{
         //Iterate over ASTList and if possible convert Expr into more specific Expr
         //If no changes are made to the ASTList, then return false
+        ArrayList<AST> compressed = new ArrayList<AST>();
+        System.out.println(ASTList.size());
         for(int i = 0;i < ASTList.size(); i++) {
             AST ast = ASTList.get(i);
             if(ast instanceof ZExpr) {
@@ -129,18 +132,122 @@ public class IParserImplementation implements IParser {
                         if(ast2 instanceof UnaryExpr) {
                             //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
                             UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+
                         } else if (ast2 instanceof ZExpr) {
                             //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
                             UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
                         } else {
                             throw new SyntaxException("Expected a primary expression or unary expression after unary expression");
                         }
                     }
+                    case LPAREN -> {
+                        //Check second AST
+                        if(i + 1 >= ASTList.size()) {
+                            throw new SyntaxException("Expected ) after (1");
+                        }
+                        //Iterate over ASTList until we find a matching )
+                        int balance = 0;
+                        for(int j = i; j < ASTList.size(); j++) {
+                            AST ast2 = ASTList.get(j);
+                            if(ast2.firstToken.getKind() == IToken.Kind.LPAREN) {
+                                balance--;
+                            } else if(ast2.firstToken.getKind() == IToken.Kind.RPAREN) {
+                                balance++;
+                            }
+                        }
+                        if(balance != 0) {
+                            System.out.println(balance);
+                            throw new SyntaxException("Expected ) after (2");
+                        }
 
+                        AST ast2 = ASTList.get(i + 1);
+                        System.out.println(ast2.firstToken.getKind());
+                        if(ast2 instanceof NumLitExpr) {
+                            //Expression within a parenthesis, just have to look for matching )
+                            if(i + 2 >= ASTList.size()) {
+                                throw new SyntaxException("Expected ) after (3");
+                            }
+                            AST ast3 = ASTList.get(i + 2);
+                            if(ast3.firstToken.getKind() == IToken.Kind.RPAREN) {
+                                //This is a primary_expr within a parenthesis, so it can be compressed from three ASTs to one
+                                String s = ast2.firstToken.getTokenString();
+                                int x = ast.firstToken.getSourceLocation().line();
+                                int y = ast.firstToken.getSourceLocation().column();
+                                INumLitToken n = new INumLitImplementation(s, "NUM_LIT", x, y);
+                                NumLitExpr numExpr = new NumLitExpr(n);
+                                i = i + 2;
+                                compressed.add(numExpr);
+                            } else {
+                                //If it isn't formatted like (Expr), we just move on because there may be a valid expression later
+                                //So we try to see if maybe another compressAST() the stuff within the parenthesis will be compressed into a single expression
+                                i++;
+                                continue;
+                            }
+
+                        } else if (ast2 instanceof StringLitExpr) {
+                            if(i + 2 >= ASTList.size()) {
+                                throw new SyntaxException("Expected ) after (3");
+                            }
+                            AST ast3 = ASTList.get(i + 2);
+                            if(ast3.firstToken.getKind() == IToken.Kind.RPAREN) {
+                                //This is a primary_expr within a parenthesis, so it can be compressed from three ASTs to one
+                                String s = ast2.firstToken.getTokenString();
+                                int x = ast.firstToken.getSourceLocation().line();
+                                int y = ast.firstToken.getSourceLocation().column();
+                                IStringLitToken n = new IStringLitImplementation(s, "STRING_LIT", x, y);
+                                NumLitExpr numExpr = new NumLitExpr(n);
+                                i = i + 2;
+                                compressed.add(numExpr);
+                            } else {
+                                //If it isn't formatted like (Expr), we just move on because there may be a valid expression later
+                                //So we try to see if maybe another compressAST() the stuff within the parenthesis will be compressed into a single expression
+                                i++;
+                                continue;
+                            }
+                        }
+                        else {
+                            throw new SyntaxException("Expected a primary expression or unary expression after unary expression");
+                        }
+                    }
+                    default -> {
+                        //Else it's just a regular primary_expr, so we just move on since it can't be compressed (it would've been compressed already)
+                        i++;
+                        continue;
+                    }
                 }
+            } else if (ast instanceof RandomExpr) {
+                //RandomExpr rand cannot be compressed unless it is preceded by a unary expression which would've already been compressed
+                i++;
+                continue;
+            } else if (ast instanceof StringLitExpr) {
+                //StringLitExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
+                i++;
+                continue;
+            } else if (ast instanceof NumLitExpr) {
+                //NumLitExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
+                i++;
+                continue;
+            } else if (ast instanceof IdentExpr) {
+                //IdentExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
+                i++;
+                continue;
+            }
+            else {
+                i++;
             }
         }
-        return false;
+        System.out.println(compressed.size());
+        if(compressed.size() == 0) {
+            return false;
+        } else {
+            if(compressed.size() == ASTList.size()) {
+                return false;
+            }
+            ASTList = compressed;
+            return true;
+        }
     }
 
 }
