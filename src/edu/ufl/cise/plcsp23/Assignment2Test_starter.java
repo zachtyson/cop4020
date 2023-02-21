@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;
@@ -76,7 +75,7 @@ class Assignment2Test_starter {
 	/**
 	 *  Checks that the given AST e has type StringLitExpr with the given String value.  Returns the given AST cast to StringLitExpr.
 	 * @param e
-	 * @param "name"
+	 * @param "name
 	 * @return
 	 */
 	StringLitExpr checkStringLit(AST e, String value) {
@@ -101,7 +100,7 @@ class Assignment2Test_starter {
 
 	/**
 	 *  Checks that the given AST e has type ConditionalExpr.  Returns the given AST cast to ConditionalExpr.
-	 * @param e
+	 * @param "e
 	 * @return
 	 */
 	private ConditionalExpr checkConditional(AST e) {
@@ -112,8 +111,8 @@ class Assignment2Test_starter {
 	/**
 	 *  Checks that the given AST e has type BinaryExpr with the given operator.  Returns the given AST cast to BinaryExpr.
 	 *
-	 * @param "e"
-	 * @param "op"  Kind of expected operator
+	 * @param "e
+	 * @param "op  Kind of expected operator
 	 * @return
 	 */
 	BinaryExpr checkBinary(AST e, Kind expectedOp) {
@@ -123,12 +122,12 @@ class Assignment2Test_starter {
 		return be;
 	}
 
-/**
- * Checks that the given AST e has type IdentExpr with the given name.  Returns the given AST cast to IdentExpr.
- * @param e
- * @param name
- * @return
- */
+	/**
+	 * Checks that the given AST e has type IdentExpr with the given name.  Returns the given AST cast to IdentExpr.
+	 * @param e
+	 * @param name
+	 * @return
+	 */
 	IdentExpr checkIdent(AST e, String name) {
 		assertThat("",e, instanceOf( IdentExpr.class));
 		IdentExpr ident = (IdentExpr)e;
@@ -181,9 +180,9 @@ class Assignment2Test_starter {
 
 
 
-@Test
-void unary1()
-	throws PLCException {
+	@Test
+	void unary1()
+			throws PLCException {
 		String input = " -3 ";
 		UnaryExpr ue = checkUnary(getAST(input), Kind.MINUS);
 		checkNumLit(ue.getE(),3);
@@ -191,9 +190,9 @@ void unary1()
 
 
 
-@Test
-void unary2()
-	throws PLCException {
+	@Test
+	void unary2()
+			throws PLCException {
 		String input = " cos atan ! - \"hello\" ";
 		UnaryExpr ue0 = checkUnary(getAST(input), Kind.RES_cos);
 		UnaryExpr ue1 = checkUnary(ue0.getE(), Kind.RES_atan);
@@ -202,88 +201,82 @@ void unary2()
 		checkStringLit(ue3.getE(), "hello");
 	}
 
-@Test void ident() throws PLCException {
-	String input = "b";
-	checkIdent(getAST(input),"b");
-}
+	@Test void ident() throws PLCException {
+		String input = "b";
+		checkIdent(getAST(input),"b");
+	}
 
-@Test void binary0() throws PLCException {
-	String input = "b+2";
-	BinaryExpr binary = checkBinary(getAST(input),Kind.PLUS);
-	checkIdent(binary.getLeft(),"b");
-	checkNumLit(binary.getRight(),2);
-}
-@Test void binary1() throws PLCException {
-	String input = "1-2+3*4/5%6";  //   (1-2) +  (((3  * 4)  /  5) % 6)
+	@Test void binary0() throws PLCException {
+		String input = "b+2";
+		BinaryExpr binary = checkBinary(getAST(input),Kind.PLUS);
+		checkIdent(binary.getLeft(),"b");
+		checkNumLit(binary.getRight(),2);
+	}
+	@Test void binary1() throws PLCException {
+		String input = "1-2+3*4/5%6";  //   (1-2) +  (((3  * 4)  /  5) % 6)
 
-	BinaryExpr be0 = checkBinary(getAST(input), Kind.PLUS); // (1-2) + (3*4/5%6)
+		BinaryExpr be0 = checkBinary(getAST(input), Kind.PLUS); // (1-2) + (3*4/5%6)
 
-	BinaryExpr be0l = checkBinary(be0.getLeft(),Kind.MINUS); // 1-2
-	checkNumLit(be0l.getLeft(),1);
-	checkNumLit(be0l.getRight(),2);
+		BinaryExpr be0l = checkBinary(be0.getLeft(),Kind.MINUS); // 1-2
+		checkNumLit(be0l.getLeft(),1);
+		checkNumLit(be0l.getRight(),2);
 
-	BinaryExpr be0r = checkBinary(be0.getRight(),Kind.MOD);  //(3*4/5)%6
-	checkNumLit(be0r.getRight(),6);
+		BinaryExpr be0r = checkBinary(be0.getRight(),Kind.MOD);  //(3*4/5)%6
+		checkNumLit(be0r.getRight(),6);
 
-	BinaryExpr be0rl = checkBinary(be0r.getLeft(),Kind.DIV );  //(3*4)/5
-	checkNumLit(be0rl.getRight(),5);  // 5
+		BinaryExpr be0rl = checkBinary(be0r.getLeft(),Kind.DIV );  //(3*4)/5
+		checkNumLit(be0rl.getRight(),5);  // 5
 
-    BinaryExpr be0rll = checkBinary(be0rl.getLeft(), Kind.TIMES); // 3*4
-	checkNumLit(be0rll.getLeft(),3);
-	checkNumLit(be0rll.getRight(),4);
-}
+		BinaryExpr be0rll = checkBinary(be0rl.getLeft(), Kind.TIMES); // 3*4
+		checkNumLit(be0rll.getLeft(),3);
+		checkNumLit(be0rll.getRight(),4);
+	}
 
-@Test void conditional0() throws PLCException {
-	String input = " if d ? e ? f";
-	ConditionalExpr ce = checkConditional(getAST(input));
-	checkIdent(ce.getGuard(),"d");
-	checkIdent(ce.getTrueCase(),"e");
-	checkIdent(ce.getFalseCase(),"f");
-}
+	@Test void conditional0() throws PLCException {
+		String input = " if d ? e ? f";
+		ConditionalExpr ce = checkConditional(getAST(input));
+		checkIdent(ce.getGuard(),"d");
+		checkIdent(ce.getTrueCase(),"e");
+		checkIdent(ce.getFalseCase(),"f");
+	}
 
 
 
-@Test void conditional1() throws PLCException {
-	String input = """
+	@Test void conditional1() throws PLCException {
+		String input = """
 			if if 3 ? 4 ? 5 ? if 6 ? 7 ? 8 ? if 9 ? 10 ? 11
 			""";
-	ConditionalExpr ce = checkConditional(getAST(input));
-	ConditionalExpr guard = checkConditional(ce.getGuard());
-	ConditionalExpr trueCase = checkConditional(ce.getTrueCase());
-	ConditionalExpr falseCase = checkConditional(ce.getFalseCase());
+		ConditionalExpr ce = checkConditional(getAST(input));
+		ConditionalExpr guard = checkConditional(ce.getGuard());
+		ConditionalExpr trueCase = checkConditional(ce.getTrueCase());
+		ConditionalExpr falseCase = checkConditional(ce.getFalseCase());
 
-	checkNumLit(guard.getGuard(),3);
-	checkNumLit(guard.getTrueCase(),4);
-	checkNumLit(guard.getFalseCase(),5);
+		checkNumLit(guard.getGuard(),3);
+		checkNumLit(guard.getTrueCase(),4);
+		checkNumLit(guard.getFalseCase(),5);
 
-	checkNumLit(trueCase.getGuard(),6);
-	checkNumLit(trueCase.getTrueCase(),7);
-	checkNumLit(trueCase.getFalseCase(),8);
+		checkNumLit(trueCase.getGuard(),6);
+		checkNumLit(trueCase.getTrueCase(),7);
+		checkNumLit(trueCase.getFalseCase(),8);
 
-	checkNumLit(falseCase.getGuard(),9);
-	checkNumLit(falseCase.getTrueCase(),10);
-	checkNumLit(falseCase.getFalseCase(),11);
-}
+		checkNumLit(falseCase.getGuard(),9);
+		checkNumLit(falseCase.getTrueCase(),10);
+		checkNumLit(falseCase.getFalseCase(),11);
+	}
 
 
-@Test void error0() throws PLCException {
-	String input = "b + + 2";
-	assertThrows(SyntaxException.class, () -> {
-		getAST(input);
-	});
-}
+	@Test void error0() throws PLCException {
+		String input = "b + + 2";
+		assertThrows(SyntaxException.class, () -> {
+			getAST(input);
+		});
+	}
 
-@Test void error1() throws PLCException {
-	String input = "3 @ 4"; //this should throw a LexicalException
-	assertThrows(LexicalException.class, () -> {
-		getAST(input);
-	});
-}
-
-@Test void error21() throws PLCException {
-		String input = "ab+b-c*d/e"; //this should throw a LexicalException
+	@Test void error1() throws PLCException {
+		String input = "3 @ 4"; //this should throw a LexicalException
 		assertThrows(LexicalException.class, () -> {
 			getAST(input);
 		});
 	}
 }
+
