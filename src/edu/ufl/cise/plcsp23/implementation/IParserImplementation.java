@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
+    private int index = 0;
     @Override
     public AST parse() throws PLCException {
         if(ASTList.size() == 0) {
@@ -46,27 +47,74 @@ public class IParserImplementation implements IParser {
             throw new SyntaxException("No tokens to parse");
         }
         //Iterate over tokenList print out each token
-        System.out.println(tokenList.size());
-        for(IToken token : tokenList) {
-            System.out.println(token.getTokenString());
-        }
-        while(tokenList.size() > 0) {
-            AST ast = parseExpr(tokenList);
-            if(ast == null) {
-                break;
-            }
-            ASTList.add(ast);
-        }
+        parseExpr(tokenList);
 
 
 
     }
 
-    AST parseExpr(ArrayList<IToken> tokenList) throws PLCException {
+    boolean parseExpr(ArrayList<IToken> tokenList) throws PLCException {
         if(tokenList.size() == 0) {
-           return null;
+           throw new SyntaxException("No tokens to parse");
         }
+        for (IToken iToken : tokenList) {
+            IToken.Kind kind = iToken.getKind();
+            //So my logic here is to kinda go left to right and parse each token as it comes in
+            //And then after tokens are parsed I will go over the ASTs and keep parsing until the AST is unchanged through a pass
+            switch (kind) {
+                case RES_rand -> {
+                    //While there always needs to be a left parenthesis, this will be checked in a later pass
+                    RandomExpr randomExpr = new RandomExpr(iToken);
+                    ASTList.add(randomExpr);
+                }
+                case IDENT -> {
+                    IdentExpr identExpr = new IdentExpr(iToken);
+                    ASTList.add(identExpr);
+                }
+                case NUM_LIT -> {
+                    String n = iToken.getTokenString();
+                    int x = iToken.getSourceLocation().line();
+                    int y = iToken.getSourceLocation().column();
+                    INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
+                    NumLitExpr numExpr = new NumLitExpr(numLitToken);
+                    ASTList.add(numExpr);
+                }
+                case STRING_LIT -> {
+                    String n = iToken.getTokenString();
+                    int x = iToken.getSourceLocation().line();
+                    int y = iToken.getSourceLocation().column();
+                    IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
+                    StringLitExpr stringExpr = new StringLitExpr(stringLitToken);
+                    ASTList.add(stringExpr);
+                }
+                default -> {
+                    ZExpr zExpr = new ZExpr(iToken);
+                    ASTList.add(zExpr);
+                }
+            }
+
+
+        }
+        for(AST ast : ASTList) {
+            System.out.println(ast.getFirstToken().getTokenString() + " " + ast.getFirstToken().getKind());
+        }
+
+
         //Primary_Expr - STRING_LIT,NUM_LIT,IDENT, (Expr),Z,rand
-        return null;
+        //Go left to right repeatedly until either there is no more tokens, there are no more ASTs, or there is a syntax error
+
+
+
+        return true;
     }
+
+    void ifStatement(ArrayList<IToken> tokenList) {
+
+    }
+
+    boolean compressAST() {
+
+        return false;
+    }
+
 }
