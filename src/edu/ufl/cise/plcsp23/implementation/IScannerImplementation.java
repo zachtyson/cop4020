@@ -193,6 +193,13 @@ public class IScannerImplementation implements IScanner {
                 }
                 if (currentTokenType.equals("NUM_LIT")) {
                     tokens.add(new INumLitImplementation(currentToken, currentTokenType, line, column));
+                    currColumn = currColumn -2;
+                    //check if stringSpot++ is out of bounds
+                    if((int)currentChar == 10) {
+
+                        currLine--;
+                    }
+                    stringSpot--;
                 } else if (currentTokenType.equals("IDENT")) {
                     //Check if currentToken is a reserved word
                     String[] reservedWords = {"image", "pixel", "int", "string", "void", "nil", "load", "display", "write",
