@@ -279,5 +279,11 @@ void unary2()
 		getAST(input);
 	});
 }
-}
 
+@Test void error21() throws PLCException {
+		String input = "ab+b-c*d/e"; //this should throw a LexicalException
+		assertThrows(LexicalException.class, () -> {
+			getAST(input);
+		});
+	}
+}
