@@ -112,8 +112,34 @@ public class IParserImplementation implements IParser {
 
     }
 
-    boolean compressAST() {
+    boolean compressAST() throws PLCException{
+        //Iterate over ASTList and if possible convert Expr into more specific Expr
+        //If no changes are made to the ASTList, then return false
+        for(int i = 0;i < ASTList.size(); i++) {
+            AST ast = ASTList.get(i);
+            if(ast instanceof ZExpr) {
+                //unary expr !, -,sin,cos,atan followed by either a primary_expr or another unary_expr
+                switch(ast.firstToken.getKind()) {
+                    case BANG,MINUS,RES_sin,RES_cos,RES_atan -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        AST ast2 = ASTList.get(i + 1);
+                        if(ast2 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                        } else if (ast2 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                        } else {
+                            throw new SyntaxException("Expected a primary expression or unary expression after unary expression");
+                        }
+                    }
 
+                }
+            }
+        }
         return false;
     }
 
