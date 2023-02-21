@@ -217,22 +217,103 @@ public class IParserImplementation implements IParser {
                         continue;
                     }
                 }
-            } else if (ast instanceof RandomExpr) {
-                //RandomExpr rand cannot be compressed unless it is preceded by a unary expression which would've already been compressed
+            }
+            else if (ast instanceof RandomExpr || ast instanceof IdentExpr || ast instanceof NumLitExpr || ast instanceof StringLitExpr) {
+                //RandomExpr can be compressed into a multiplicative_expr (which can lead to an additive_expr)
+                //No need to check the kind of RandomExpr because it can only be one kind
+                if(i + 1 == ASTList.size()) {
+                    //I don't think there's any issues if this happens but I'll leave it here just in case
+                    i++;
+                    continue;
+                }
+                AST ast2 = ASTList.get(i + 1);
+                switch(ast2.firstToken.getKind()) {
+                    case PLUS,MINUS -> { //additive_expr
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after additive expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after additive expression");
+                        }
+                    }
+                    case TIMES,DIV,MOD -> { //multiplicative_expr
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
+                        }
+                    }
+
+                }
                 i++;
                 continue;
-            } else if (ast instanceof StringLitExpr) {
-                //StringLitExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
-                i++;
-                continue;
-            } else if (ast instanceof NumLitExpr) {
-                //NumLitExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
-                i++;
-                continue;
-            } else if (ast instanceof IdentExpr) {
-                //IdentExpr cannot be compressed unless it is preceded by a unary expression which would've already been compressed
-                i++;
-                continue;
+            }
+            else if (ast instanceof UnaryExpr) {
+                //UnaryExpr can be treated similar to a primary_expr in the sense
+                //that ie can be compressed into multiplicative,additive, or power expressions
+                if(i + 1 == ASTList.size()) {
+                    //I don't think there's any issues if this happens but I'll leave it here just in case
+                    i++;
+                    continue;
+                }
+                AST ast2 = ASTList.get(i + 1);
+                switch(ast2.firstToken.getKind()) {
+                    case PLUS,MINUS -> { //additive_expr
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after additive expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after additive expression");
+                        }
+                    }
+                    case TIMES,DIV,MOD -> { //multiplicative_expr
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
+                        }
+                    }
+                    case EXP -> { //power_expr
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after power expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after power expression");
+                        }
+                    }
+                }
             }
             else {
                 i++;
