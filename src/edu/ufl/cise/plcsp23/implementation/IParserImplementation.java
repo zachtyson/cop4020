@@ -1,10 +1,7 @@
 package edu.ufl.cise.plcsp23.implementation;
 
-import edu.ufl.cise.plcsp23.LexicalException;
-import edu.ufl.cise.plcsp23.SyntaxException;
-import edu.ufl.cise.plcsp23.IParser;
-import edu.ufl.cise.plcsp23.PLCException;
-import edu.ufl.cise.plcsp23.ast.AST;
+import edu.ufl.cise.plcsp23.*;
+import edu.ufl.cise.plcsp23.ast.*;
 
 import java.util.ArrayList;
 
@@ -27,28 +24,49 @@ public class IParserImplementation implements IParser {
     //additive_expr = multiplicative_expr (+/- multiplicative_expr)* -- At least one multiplicative_expr followed by zero or more +/- multiplicative_expr
     //multiplicative_expr = unary_expr (*//% unary_expr)* -- At least one unary_expr followed by zero or more */% unary_expr
 
-    public IParserImplementation(String input) throws SyntaxException, LexicalException, PLCException {
+    public IParserImplementation(String input) throws PLCException {
+        System.out.println(input);
         if(input == null || input.isEmpty()) {
             throw new SyntaxException("Input is null or empty");
         }
         //Create a scanner
         IScannerImplementation scanner = new IScannerImplementation(input);
         //Pass the input to the scanner
-        while (true) {
-            try {
-                throw new SyntaxException("Not yet implemented");
-            } catch (Exception e) {
-                if(e.getMessage().equals("Number out of bounds")) {
-                    throw new SyntaxException("Number out of bounds");
-                    //I don't think this will ever happen given the nature of Assignment 2
-                } else if(e.getMessage().equals("No tokens")) {
-                    //This should only happen when there is an empty input, and it somehow gets past the null check
-                    throw new SyntaxException("Input is null or empty");
-                }
+        //Get each token from the scanner and parse it into an AST
+        ArrayList<IToken> tokenList = new ArrayList<>();
+        while(true) {
+            IToken token = scanner.next();
+            if(token.getKind() == IToken.Kind.EOF) {
                 break;
             }
+            tokenList.add(token);
         }
 
-        throw new SyntaxException("Not yet implemented");
+        if(tokenList.size() == 0) {
+            throw new SyntaxException("No tokens to parse");
+        }
+        //Iterate over tokenList print out each token
+        System.out.println(tokenList.size());
+        for(IToken token : tokenList) {
+            System.out.println(token.getTokenString());
+        }
+        while(tokenList.size() > 0) {
+            AST ast = parseExpr(tokenList);
+            if(ast == null) {
+                break;
+            }
+            ASTList.add(ast);
+        }
+
+
+
+    }
+
+    AST parseExpr(ArrayList<IToken> tokenList) throws PLCException {
+        if(tokenList.size() == 0) {
+           return null;
+        }
+        //Primary_Expr - STRING_LIT,NUM_LIT,IDENT, (Expr),Z,rand
+        return null;
     }
 }
