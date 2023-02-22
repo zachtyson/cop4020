@@ -156,10 +156,127 @@ public class IParserImplementation implements IParser {
             if(ast instanceof ZExpr) {
                 //unary expr !, -,sin,cos,atan followed by either a primary_expr or another unary_expr
                 switch(ast.firstToken.getKind()) {
+                    case BITOR,OR -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        AST ast2 = ASTList.get(i + 1);
+                        if(ast2 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast2 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast2.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast2 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
+                    case AND,BITAND -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
+                        AST ast2 = ASTList.get(i + 1);
+                        if(ast2 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast2 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast2.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast2 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
+                    case GE,LE,EQ,LT,GT -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
+                        AST ast2 = ASTList.get(i + 1);
+                        if(ast2 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast2 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast2.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast2 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast2);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
                     case BANG,MINUS,RES_sin,RES_cos,RES_atan -> {
                         //Check second AST
                         if(i + 1 == ASTList.size()) {
                             throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
                         }
                         AST ast2 = ASTList.get(i + 1);
                         if(ast2 instanceof UnaryExpr) {
@@ -293,6 +410,10 @@ public class IParserImplementation implements IParser {
                         }
                     }
                     case PLUS,DIV-> {
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
                         //Iterate over ASTList to see if there's any * / or % since they have higher precedence
                         i++;
                         same = false;
@@ -418,9 +539,165 @@ public class IParserImplementation implements IParser {
                 }
                 AST ast2 = ASTList.get(i + 1);
                 switch(ast2.firstToken.getKind()) {
+                    case BITOR,OR -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        AST ast3 = ASTList.get(i + 1);
+                        if(ast3 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast3 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast3.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast3 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
+                    case AND,BITAND -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
+                        AST ast3 = ASTList.get(i + 1);
+                        if(ast3 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast3 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast3.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast3 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
+                    case GE,LE,EQ,LT,GT -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
+                        AST ast3 = ASTList.get(i + 1);
+                        if(ast3 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast3 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast3.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast3 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
+                    case BANG,RES_sin,RES_cos,RES_atan -> {
+                        //Check second AST
+                        if(i + 1 == ASTList.size()) {
+                            throw new SyntaxException("Expected an expression after unary expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
+                        AST ast3 = ASTList.get(i + 1);
+                        if(ast3 instanceof UnaryExpr) {
+                            //This unary expr is op + unary_expr, so it can be compressed from two ASTs to one
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+
+                        } else if (ast3 instanceof ZExpr) {
+                            //This unary expr is op + primary_expr, so it can be compressed from two ASTs to one
+                            IToken.Kind k = ast3.firstToken.getKind();
+                            if(k == IToken.Kind.BANG || k == IToken.Kind.MINUS || k == IToken.Kind.RES_sin || k == IToken.Kind.RES_cos || k == IToken.Kind.RES_atan) {
+                                compressed.add(ast);
+                                continue;
+                            }
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        } else if (ast3 instanceof StringLitExpr) {
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                        else {
+                            //Else I think this can still be a unary expr
+
+                            UnaryExpr unaryExpr = new UnaryExpr(ast.firstToken, ast.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(unaryExpr);
+                            same = false;
+                        }
+                    }
                     case PLUS,MINUS -> { //additive_expr
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after additive expression 1");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -434,6 +711,10 @@ public class IParserImplementation implements IParser {
                         }
                     }
                     case TIMES,DIV,MOD -> { //multiplicative_expr
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after multiplicative expression");
                         }
@@ -449,6 +730,10 @@ public class IParserImplementation implements IParser {
                         }
                     }
                     case EXP -> {
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after power expression");
                         }
@@ -485,8 +770,13 @@ public class IParserImplementation implements IParser {
                 switch(ast2.firstToken.getKind()) {
 
                     case PLUS,MINUS -> { //additive_expr
+
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after additive expression 3");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -504,6 +794,10 @@ public class IParserImplementation implements IParser {
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after multiplicative expression");
                         }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
+                        }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
                             BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
@@ -519,6 +813,10 @@ public class IParserImplementation implements IParser {
                     case EXP -> { //power_expr
                         if(i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after power expression");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -542,9 +840,13 @@ public class IParserImplementation implements IParser {
                 AST ast2 = ASTList.get(i + 1);
                 switch (ast2.firstToken.getKind()) {
 
-                    case PLUS, MINUS -> {
+                    case PLUS, MINUS,OR,BITOR,AND,BITAND,GE,LE,EQ,GT,LT,EXP,TIMES,MOD,DIV,BANG,RES_sin,RES_cos,RES_atan -> {
                         if (i + 2 == ASTList.size()) {
                             throw new SyntaxException("Expected a primary expression after additive expression 5 ");
+                        }
+                        if(checkHigherPrecedence(i + 1,compressed)) {
+                            compressed.add(ast);
+                            continue;
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if (ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -553,7 +855,14 @@ public class IParserImplementation implements IParser {
                             i = i + 2;
                             same = false;
                             continue;
-                        } else {
+                        }  else if(ast3 instanceof BinaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            i = i + 2;
+                            same = false;
+                            continue;
+                        }
+                        else {
                             i++;
                             continue;
                         }
@@ -585,4 +894,64 @@ public class IParserImplementation implements IParser {
         }
     }
 
+    boolean checkHigherPrecedence(int spot,ArrayList<AST> ASTList) {
+        //Iterates through the ASTList and checks if there is a higher precedence operator
+        //if there is, consume those first before consuming the current operator
+        //The precedence goes:
+        //| ||
+        //& &&
+        // < > == <= >=
+        // **
+        // + -
+        //* / %
+        //! -(negative) sin cos atan
+        if(spot >= ASTList.size()) {
+            return false;
+        }
+        AST ast = ASTList.get(spot);
+        if(!(ast instanceof ZExpr)) {
+            return false;
+        }
+        int s = getPrecedenceNum(spot, ASTList, ast);
+        ArrayList<Integer> precedenceList = new ArrayList<>();
+        for(int i = spot; i < ASTList.size(); i++) {
+            AST ast2 = ASTList.get(i);
+            if(ast2 instanceof ZExpr) {
+                int num = getPrecedenceNum(i, ASTList, ast2);
+                if(num <= s) {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+
+    }
+
+    int getPrecedenceNum(int spot, ArrayList<AST> ASTList, AST ast) {
+        return switch (ast.firstToken.getKind()) {
+            case OR,BITOR-> 1;
+            case AND,BITAND -> 2;
+            case LT,GT,LE,GE,EQ -> 3;
+            case EXP -> 4;
+            case PLUS -> 5;
+            case TIMES,DIV,MOD -> 6;
+            case BANG,RES_atan,RES_cos,RES_sin-> 7;
+            case MINUS -> getMinusPrecedence(spot, ASTList);
+            default -> 100;
+        };
+    }
+
+    int getMinusPrecedence(int spot, ArrayList<AST> ASTList) {
+        //Checks if the minus is a negative sign or a subtraction sign
+        //If it's a negative sign, it returns 7
+        //If it's a subtraction sign, it returns 5
+        if(spot == 0) {
+            return 5;
+        }
+        //Absolutely no idea how I would code this so I'm just gonna leave it like this until a problem arises
+        else {
+            return 7;
+        }
+    }
 }
