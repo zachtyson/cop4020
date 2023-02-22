@@ -1,9 +1,12 @@
 package edu.ufl.cise.plcsp23.implementation;
 
+import com.sun.tools.jconsole.JConsoleContext;
 import edu.ufl.cise.plcsp23.*;
 import edu.ufl.cise.plcsp23.ast.*;
 
+import java.io.Console;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
@@ -57,7 +60,24 @@ public class IParserImplementation implements IParser {
             for (AST ast : ASTList) {
                 //System.out.println(ast.firstToken.getKind()+" "+ast.firstToken.getTokenString());
             }
-            notCompressed = compressAST();
+            notCompressed = compressAST(0);
+        }
+        while(notCompressed) {
+            //System.out.println("Compression Pass: "+count);
+            count++;
+            //System.out.println("ASTs:" + ASTList.size());
+            for (AST ast : ASTList) {
+                //System.out.println(ast.firstToken.getKind()+" "+ast.firstToken.getTokenString());
+            }
+            notCompressed = compressAST(0);
+        }
+        for(AST ast : ASTList) {
+
+        }
+        System.out.println("ASTs:");
+        for(AST ast : ASTList) {
+            System.out.println(ast.getFirstToken().getTokenString() + " " + ast.getFirstToken().getKind());
+            //recursivelyPrintAST(ast);
         }
 
     }
@@ -104,10 +124,7 @@ public class IParserImplementation implements IParser {
 
 
         }
-        for(AST ast : ASTList) {
-            //System.out.println(ast.getFirstToken().getTokenString() + " " + ast.getFirstToken().getKind());
-            //recursivelyPrintAST(ast);
-        }
+
 
 
         //Primary_Expr - STRING_LIT,NUM_LIT,IDENT, (Expr),Z,rand
@@ -122,7 +139,7 @@ public class IParserImplementation implements IParser {
 
     }
 
-    boolean compressAST() throws PLCException{
+    boolean compressAST(int startSpot) throws PLCException{
         //Iterate over ASTList and if possible convert Expr into more specific Expr
         //If no changes are made to the ASTList, then return false
         boolean same = true;
@@ -131,8 +148,9 @@ public class IParserImplementation implements IParser {
 //            System.out.println(ast.firstToken.getKind() + " " + ast.firstToken.getTokenString());
 //        }
         //parseMultiDivModulo(compressed);
-        for(int i = 0;i < ASTList.size(); i++) {
-            System.out.println(i);
+
+        for(int i = startSpot ;i < ASTList.size(); i++) {
+            //System.out.println(i);
             //System.out.println("TEMP" + ASTList.get(i).firstToken.getKind() + " " + ASTList.get(i).firstToken.getTokenString());
             AST ast = ASTList.get(i);
             if(ast instanceof ZExpr) {
@@ -193,8 +211,22 @@ public class IParserImplementation implements IParser {
                         }
 
                         AST ast2 = ASTList.get(i + 1);
-                        if(ast2 instanceof NumLitExpr) {
+                        if(ast2 instanceof NumLitExpr || ast2 instanceof StringLitExpr || ast2 instanceof IdentExpr || ast2 instanceof ZExpr  || ast2 instanceof UnaryExpr) {
                             //Expression within a parenthesis, just have to look for matching )
+                            if(ast2 instanceof ZExpr) {
+                                if(ast2.getFirstToken().getKind() == IToken.Kind.RPAREN) {
+                                    throw new SyntaxException("Expected expression after (");
+                                }
+                                if(ast2.getFirstToken().getKind() == IToken.Kind.LPAREN) {
+                                    if(i + 2 >= ASTList.size()) {
+                                        throw new SyntaxException("Expected ) after (3");
+                                    }
+                                    AST ast3 = ASTList.get(i + 2);
+                                    if(ast3.firstToken.getKind() == IToken.Kind.RPAREN) {
+                                        throw new SyntaxException("Expected expression after (");
+                                    }
+                                }
+                            }
                             if(i + 2 >= ASTList.size()) {
                                 throw new SyntaxException("Expected ) after (3");
                             }
@@ -204,11 +236,25 @@ public class IParserImplementation implements IParser {
                                 String s = ast2.firstToken.getTokenString();
                                 int x = ast.firstToken.getSourceLocation().line();
                                 int y = ast.firstToken.getSourceLocation().column();
-                                INumLitToken n = new INumLitImplementation(s, "NUM_LIT", x, y);
-                                NumLitExpr numExpr = new NumLitExpr(n);
+                                if(ast2 instanceof NumLitExpr) {
+                                    INumLitToken n = new INumLitImplementation(s, "NUM_LIT", x, y);
+                                    NumLitExpr numExpr = new NumLitExpr(n);
+                                    compressed.add(numExpr);
+                                } else if (ast2 instanceof StringLitExpr) {
+                                    IStringLitToken n = new IStringLitImplementation(s, "STRING_LIT", x, y);
+                                    StringLitExpr numExpr = new StringLitExpr(n);
+                                    compressed.add(numExpr);
+                                } else if (ast2 instanceof IdentExpr) {
+                                    IToken n = new ITokenImplementation(s, "IDENT", x, y);
+                                    IdentExpr numExpr = new IdentExpr(n);
+                                    compressed.add(numExpr);
+                                } else {
+                                    IToken n = new ITokenImplementation(s, ast2.firstToken.getKind().toString(), x, y);
+                                    IdentExpr numExpr = new IdentExpr(n);
+                                    compressed.add(numExpr);
+                                }
                                 i = i + 2;
                                 same = false;
-                                compressed.add(numExpr);
                             } else {
                                 //If it isn't formatted like (Expr), we just move on because there may be a valid expression later
                                 //So we try to see if maybe another compressAST() the stuff within the parenthesis will be compressed into a single expression
@@ -217,28 +263,6 @@ public class IParserImplementation implements IParser {
                                 continue;
                             }
 
-                        } else if (ast2 instanceof StringLitExpr) {
-                            if(i + 2 >= ASTList.size()) {
-                                throw new SyntaxException("Expected ) after (3");
-                            }
-                            AST ast3 = ASTList.get(i + 2);
-                            if(ast3.firstToken.getKind() == IToken.Kind.RPAREN) {
-                                //This is a primary_expr within a parenthesis, so it can be compressed from three ASTs to one
-                                String s = ast2.firstToken.getTokenString();
-                                int x = ast.firstToken.getSourceLocation().line();
-                                int y = ast.firstToken.getSourceLocation().column();
-                                IStringLitToken n = new IStringLitImplementation(s, "STRING_LIT", x, y);
-                                NumLitExpr numExpr = new NumLitExpr(n);
-                                i = i + 2;
-                                same = false;
-                                compressed.add(numExpr);
-                            } else {
-                                //If it isn't formatted like (Expr), we just move on because there may be a valid expression later
-                                //So we try to see if maybe another compressAST() the stuff within the parenthesis will be compressed into a single expression
-                                i++;
-                                compressed.add(ast);
-                                continue;
-                            }
                         }
                         else if (ast2 instanceof BinaryExpr) {
                             if(i + 2 >= ASTList.size()) {
@@ -279,6 +303,103 @@ public class IParserImplementation implements IParser {
                         //Condtionals are formatted as so:
                         //if <expr> ? <expr> ? <expr>
                         //first expression is the guard, second is the true expression, third is the false expression
+                        AST ast1 = ASTList.get(i);
+                        //So basically this is intended to be a recursive function that will parse the if statement
+                        //And I did this because there can technically be infinitely nested if statements
+
+                        if(i + 1 >= ASTList.size()) {
+                            //There isn't enough space for an if statement
+                            //I could just check for +4 instead of +1 but I did this for sake of future detailed error messages
+                            throw new SyntaxException("Expected an if statement");
+                        }
+                        AST ast2 = ASTList.get(i + 1);
+                        if (ast2.firstToken.getKind() == IToken.Kind.RES_if) {
+                            compressed.add(ast);
+                            boolean[] b = new boolean[6];
+                            //Make all the booleans false
+                            b[0] = true;
+                            b[1] = true;
+                            if(i + 2 >= ASTList.size()) {
+                                throw new SyntaxException("Expected a ? after expr statement");
+                            }
+                            AST ast3 = ASTList.get(i + 2);
+                            if(ast3.firstToken.getKind() != IToken.Kind.QUESTION) {
+                                continue;
+                            } else {
+                                b[2] = true;
+                            }
+                            if(i + 3 >= ASTList.size()) {
+                                continue;
+                            }
+                            AST ast4 = ASTList.get(i + 3);
+                            if(ast4.firstToken.getKind() != IToken.Kind.QUESTION) {
+                                b[3] = true;
+                            }
+                            if(i + 4 >= ASTList.size()) {
+                                continue;
+                            }
+                            AST ast5 = ASTList.get(i + 4);
+                            if(ast5.firstToken.getKind() == IToken.Kind.QUESTION) {
+                                b[4] = true;
+                            }
+                            if(i + 5 >= ASTList.size()) {
+                                continue;
+                            }
+                            AST ast6 = ASTList.get(i + 5);
+
+                            if(!(ast6 instanceof ZExpr)) {
+                                b[5] = true;
+                            } else b[5] = ast6.firstToken.getKind() != IToken.Kind.QUESTION;
+                            compressed.remove(compressed.size() - 1);
+
+                            AST smh = new ConditionalExpr(ast.firstToken, (Expr) ast2, (Expr) ast4, (Expr) ast6);
+                            compressed.add(smh);
+                            i = i + 5;
+                            same = false;
+                            break;
+                        } else {//This is not an if statement
+                            //I think that it would work fine if I just parsed until I found a ?
+                            //But I'm not sure if that would be the best way to do it
+                            if (i + 2 >= ASTList.size()) {
+                                throw new SyntaxException("Expected a ? after expr statement");
+                            }
+                            AST ast3 = ASTList.get(i + 2);
+                            //So if ast3 isn't a ? then I guess I can just return, parse it into a single expression, and then continue
+                            if (ast3.firstToken.getKind() != IToken.Kind.QUESTION) {
+                                continue;
+                            } else {
+                                //ast3 is a ? so it goes
+                                //ast1 is if
+                                //ast2 is guard
+                                //ast3 is ?
+                                //now we just need true expression, ?, and false expression
+                                if (i + 3 >= ASTList.size()) {
+                                    throw new SyntaxException("Expected a true expression after ?");
+                                }
+                                AST ast4 = ASTList.get(i + 3);
+                                if (i + 4 >= ASTList.size()) {
+                                    throw new SyntaxException("Expected a ? after true expression");
+                                    //Should be true expression, or partial true expression
+                                }
+                                AST ast5 = ASTList.get(i + 4);
+                                if (i + 5 >= ASTList.size()) {
+                                    throw new SyntaxException("Expected a ? after true expression");
+                                }
+                                if(ast5.firstToken.getKind() != IToken.Kind.QUESTION) {
+                                    //
+                                    continue;
+                                } else {
+                                    AST ast6 = ASTList.get(i + 5);
+                                    AST ConditionalExpr = new ConditionalExpr(ast1.firstToken, (Expr)ast2, (Expr)ast4, (Expr)ast6);
+                                    compressed.add(ConditionalExpr);
+                                    i = i + 5;
+                                    same = false;
+                                    continue;
+
+                                }
+                            }
+                        }
+
                     }
                     default -> {
                         //Else it's just a regular primary_expr, so we just move on since it can't be compressed (it would've been compressed already)
@@ -299,7 +420,7 @@ public class IParserImplementation implements IParser {
                 switch(ast2.firstToken.getKind()) {
                     case PLUS,MINUS -> { //additive_expr
                         if(i + 2 == ASTList.size()) {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            throw new SyntaxException("Expected a primary expression after additive expression 1");
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -309,7 +430,7 @@ public class IParserImplementation implements IParser {
                             same = false;
                             continue;
                         } else {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            throw new SyntaxException("Expected a primary expression after additive expression 2");
                         }
                     }
                     case TIMES,DIV,MOD -> { //multiplicative_expr
@@ -320,11 +441,32 @@ public class IParserImplementation implements IParser {
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
                             BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
                             compressed.add(binaryExpr);
+                            same = false;
                             i = i + 2;
                             continue;
                         } else {
                             throw new SyntaxException("Expected a primary expression after multiplicative expression");
                         }
+                    }
+                    case EXP -> {
+                        if(i + 2 == ASTList.size()) {
+                            throw new SyntaxException("Expected a primary expression after power expression");
+                        }
+                        AST ast3 = ASTList.get(i + 2);
+                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
+                            BinaryExpr binaryExpr = new BinaryExpr(ast.firstToken, (Expr) ast, ast2.firstToken.getKind(), (Expr) ast3);
+                            compressed.add(binaryExpr);
+                            same = false;
+                            i = i + 2;
+                            System.out.println("I'm here");
+                            continue;
+                        } else {
+                            throw new SyntaxException("Expected a primary expression after power expression");
+                        }
+                    }
+                    default -> {
+                        compressed.add(ast);
+
                     }
 
                 }
@@ -340,12 +482,11 @@ public class IParserImplementation implements IParser {
                     continue;
                 }
                 AST ast2 = ASTList.get(i + 1);
-                System.out.println("Here");
                 switch(ast2.firstToken.getKind()) {
 
                     case PLUS,MINUS -> { //additive_expr
                         if(i + 2 == ASTList.size()) {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            throw new SyntaxException("Expected a primary expression after additive expression 3");
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -356,7 +497,7 @@ public class IParserImplementation implements IParser {
                             continue;
 
                         } else {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            throw new SyntaxException("Expected a primary expression after additive expression 4");
                         }
                     }
                     case TIMES,DIV,MOD -> { //multiplicative_expr
@@ -403,7 +544,7 @@ public class IParserImplementation implements IParser {
 
                     case PLUS, MINUS -> {
                         if (i + 2 == ASTList.size()) {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            throw new SyntaxException("Expected a primary expression after additive expression 5 ");
                         }
                         AST ast3 = ASTList.get(i + 2);
                         if (ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
@@ -413,7 +554,8 @@ public class IParserImplementation implements IParser {
                             same = false;
                             continue;
                         } else {
-                            throw new SyntaxException("Expected a primary expression after additive expression");
+                            i++;
+                            continue;
                         }
                     }
                 }
@@ -428,177 +570,6 @@ public class IParserImplementation implements IParser {
 
             ASTList = compressed;
             return true;
-        }
-    }
-    void parseMultiDivModulo(ArrayList<AST> compressed) throws SyntaxException {
-        //ArrayLists in Java are passed by reference so we don't need to return anything
-        //purpose of this is to parse multiplication, division, and modulo prior to addition and subtraction because
-        //multiplication, division, and modulo have higher precedence than addition and subtraction
-        //e.g 1 + 2 * 3 = 7 since 2 * 3 is evaluated first
-        for(int i = 0; i < ASTList.size(); i++) {
-            //Iterate through the ASTList for ZExpr (Multiplication, Division, Modulo)
-            //If they are found, go back one and forward one and compress them into a BinaryExpr if possible
-            //If not possible, throw a SyntaxException
-            AST ast = ASTList.get(i);
-            if(ast instanceof ZExpr || ast instanceof RandomExpr || ast instanceof IdentExpr || ast instanceof NumLitExpr || ast instanceof StringLitExpr) {
-                if(ast.firstToken.getKind() == IToken.Kind.MOD || ast.firstToken.getKind() == IToken.Kind.DIV || ast.firstToken.getKind() == IToken.Kind.TIMES) {
-                    //We have determined that ast is either a multiplication, division, or modulo expression
-                    //Go back one and forward one and compress them into a BinaryExpr if possible
-                    if(i == 0) {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    if(i + 1 == ASTList.size()) {
-                        throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                    }
-                    AST ast2 = ASTList.get(i - 1);
-                    AST ast3 = ASTList.get(i + 1);
-                    if(ast2 instanceof RandomExpr || ast2 instanceof IdentExpr || ast2 instanceof NumLitExpr || ast2 instanceof StringLitExpr || ast2 instanceof UnaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            //Place binaryExpr in original
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else if (ast2 instanceof BinaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    //Remove the three elements from the ASTList and replace them with the BinaryExpr
-
-                }
-            }
-            else if(ast instanceof UnaryExpr) {
-                if(ast.firstToken.getKind() == IToken.Kind.MOD || ast.firstToken.getKind() == IToken.Kind.DIV || ast.firstToken.getKind() == IToken.Kind.TIMES) {
-                    //We have determined that ast is either a multiplication, division, or modulo expression
-                    //Go back one and forward one and compress them into a BinaryExpr if possible
-                    if(i == 0) {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    if(i + 1 == ASTList.size()) {
-                        throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                    }
-                    AST ast2 = ASTList.get(i - 1);
-                    AST ast3 = ASTList.get(i + 1);
-                    if(ast2 instanceof RandomExpr || ast2 instanceof IdentExpr || ast2 instanceof NumLitExpr || ast2 instanceof StringLitExpr || ast2 instanceof UnaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            //Place binaryExpr in original
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else if (ast2 instanceof BinaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    //Remove the three elements from the ASTList and replace them with the BinaryExpr
-
-                }
-
-            }
-            else if(ast instanceof BinaryExpr) {
-                if(ast.firstToken.getKind() == IToken.Kind.MOD || ast.firstToken.getKind() == IToken.Kind.DIV || ast.firstToken.getKind() == IToken.Kind.TIMES) {
-                    //We have determined that ast is either a multiplication, division, or modulo expression
-                    //Go back one and forward one and compress them into a BinaryExpr if possible
-                    if(i == 0) {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    if(i + 1 == ASTList.size()) {
-                        throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                    }
-                    AST ast2 = ASTList.get(i - 1);
-                    AST ast3 = ASTList.get(i + 1);
-                    if(ast2 instanceof RandomExpr || ast2 instanceof IdentExpr || ast2 instanceof NumLitExpr || ast2 instanceof StringLitExpr || ast2 instanceof UnaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            //Place binaryExpr in original
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else if (ast2 instanceof BinaryExpr) {
-                        if(ast3 instanceof RandomExpr || ast3 instanceof IdentExpr || ast3 instanceof NumLitExpr || ast3 instanceof StringLitExpr || ast3 instanceof UnaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        } else if (ast3 instanceof BinaryExpr) {
-                            BinaryExpr binaryExpr = new BinaryExpr(ast2.firstToken, (Expr) ast2, ast.firstToken.getKind(), (Expr) ast3);
-                            ASTList.set(i - 1, binaryExpr);
-                            ASTList.remove(i);
-                            ASTList.remove(i);
-                        }
-                        else {
-                            throw new SyntaxException("Expected a primary expression after multiplicative expression");
-                        }
-                    }
-                    else {
-                        throw new SyntaxException("Expected a primary expression before multiplicative expression");
-                    }
-                    //Remove the three elements from the ASTList and replace them with the BinaryExpr
-
-                }
-
-            }
-
         }
     }
     void recursivelyPrintAST(AST a) {
