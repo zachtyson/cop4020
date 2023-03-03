@@ -26,6 +26,10 @@ public class NumLitExpr extends Expr {
 	}
 
 	public int getValue() {
+		//NumLitTokens are implementations of INumLitToken which means I don't think
+		//that an IToken can be cast to an INumLitToken
+		//so I guess that I gotta figure out how to get the value from the token
+		System.out.println("NumLitExpr: getValue() called");
 		return ((INumLitToken)firstToken).getValue();
 	}
 
