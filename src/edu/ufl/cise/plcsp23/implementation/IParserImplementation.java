@@ -79,6 +79,33 @@ public class IParserImplementation implements IParser {
         return null;
     }
 
+    private Expr or_expr() throws PLCException {
+        //or_expr = and_expr (|/|| and_expr)* -- At least one and_expr followed by zero or more |/|| and_expr
+        Expr expr = and_expr();
+        if(expr == null) {
+            return null;
+        }
+        if(tokenList.get(index).getKind() == IToken.Kind.BITOR || tokenList.get(index).getKind() == IToken.Kind.OR) {
+            IToken op = tokenList.get(index);
+            index++;
+            Expr expr2 = and_expr();
+            if(expr2 == null) {
+                throw new SyntaxException("Expected expr after |");
+            }
+            return new BinaryExpr(expr.getFirstToken(), expr, op.getKind(),expr2);
+        }
+        return expr;
+    }
+
+    private Expr and_expr() throws PLCException {
+        //and_expr = comparison_expr (&/&& comparison_expr)* -- At least one comparison_expr followed by zero or more &/&& comparison_expr
+        Expr expr = comparison_expr();
+        if(expr == null) {
+            return null;
+        }
+
+    }
+
     private void getTokens(String input) throws PLCException {
         while(true) {
             IScannerImplementation scanner = new IScannerImplementation(input);
