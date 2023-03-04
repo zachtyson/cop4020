@@ -95,12 +95,13 @@ public class IParserImplementation implements IParser {
             return expr;
         }
         if(tokenList.get(index).getKind() == IToken.Kind.AND || tokenList.get(index).getKind() == IToken.Kind.BITAND) {
+            int i = index;
             index++;
             Expr expr2 = comparison_expr();
             if(expr2 == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(index).getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
         }
         return expr;
     }
@@ -116,11 +117,12 @@ public class IParserImplementation implements IParser {
         }
         if(tokenList.get(index).getKind() == IToken.Kind.LT || tokenList.get(index).getKind() == IToken.Kind.GT || tokenList.get(index).getKind() == IToken.Kind.EQ || tokenList.get(index).getKind() == IToken.Kind.LE || tokenList.get(index).getKind() == IToken.Kind.GE) {
             index++;
+            int i = index;
             Expr expr2 = power_expr();
             if(expr2 == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(index).getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
         }
         return expr;
     }
@@ -161,6 +163,7 @@ public class IParserImplementation implements IParser {
         if(tokenList.get(index).getKind() == IToken.Kind.PLUS || tokenList.get(index).getKind() == IToken.Kind.MINUS) {
             IToken op = tokenList.get(index);
             index++;
+
             Expr expr2 = multiplicative_expr();
             if(expr2 == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
@@ -199,13 +202,15 @@ public class IParserImplementation implements IParser {
         }
         if(tokenList.get(index).getKind() == IToken.Kind.BANG || tokenList.get(index).getKind() == IToken.Kind.MINUS || tokenList.get(index).getKind() == IToken.Kind.RES_sin || tokenList.get(index).getKind() == IToken.Kind.RES_cos || tokenList.get(index).getKind() == IToken.Kind.RES_atan) {
             IToken op = tokenList.get(index);
+            int i = index;
             index++;
             Expr expr = unary_expr();
             if(expr == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
             }
-            return new UnaryExpr(tokenList.get(index - 1), op.getKind(), expr);
+            return new UnaryExpr(tokenList.get(i), op.getKind(), expr);
         }
+
         return primary_expr();
     }
 
@@ -251,8 +256,21 @@ public class IParserImplementation implements IParser {
             index++;
             return new RandomExpr(tokenList.get(index - 1));
         }
+        //check for invalid token
+        if(tokenList.get(index).getKind() == IToken.Kind.EOF) {
+            return null;
+        }
+        if(tokenList.get(index).getKind() == IToken.Kind.RPAREN) {
+            throw new SyntaxException("Expected an expression before " + tokenList.get(index).getKind());
+        }
+        checkInvalidFallThrough();
         index++;
         return new ZExpr(tokenList.get(index-1));
+    }
+
+    boolean checkInvalidFallThrough() {
+        //this is for a base ZExpr to check to see if there's any invalid tokens
+        return tokenList.get(index).getKind() == IToken.Kind.DOT || tokenList.get(index).getKind() == IToken.Kind.COMMA || tokenList.get(index).getKind() == IToken.Kind.QUESTION || tokenList.get(index).getKind() == IToken.Kind.COLON || tokenList.get(index).getKind() == IToken.Kind.EQ || tokenList.get(index).getKind() == IToken.Kind.ASSIGN || tokenList.get(index).getKind() == IToken.Kind.EXCHANGE || tokenList.get(index).getKind() == IToken.Kind.LE || tokenList.get(index).getKind() == IToken.Kind.GE || tokenList.get(index).getKind() == IToken.Kind.BANG || tokenList.get(index).getKind() == IToken.Kind.BITAND || tokenList.get(index).getKind() == IToken.Kind.AND || tokenList.get(index).getKind() == IToken.Kind.BITOR || tokenList.get(index).getKind() == IToken.Kind.OR || tokenList.get(index).getKind() == IToken.Kind.PLUS || tokenList.get(index).getKind() == IToken.Kind.MINUS || tokenList.get(index).getKind() == IToken.Kind.TIMES || tokenList.get(index).getKind() == IToken.Kind.EXP || tokenList.get(index).getKind() == IToken.Kind.DIV || tokenList.get(index).getKind() == IToken.Kind.MOD || tokenList.get(index).getKind() == IToken.Kind.ERROR;
     }
 
 
