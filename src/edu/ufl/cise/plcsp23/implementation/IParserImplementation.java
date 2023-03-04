@@ -45,6 +45,15 @@ public class IParserImplementation implements IParser {
             }
             ASTList.add(ast);
         }
+        System.out.println(ASTList.size());
+        for(AST ast : ASTList) {
+            System.out.println(ast.getFirstToken().getTokenString());
+        }
+        //Iterate over ASTList and see if any ASTs can be reduced
+        //If they can, reduce them
+        //If they can't, move on to the next one
+        ArrayList<AST> prevIteration = new ArrayList<AST>();
+        
     }
 
     private Expr expr() throws PLCException {
@@ -130,7 +139,16 @@ public class IParserImplementation implements IParser {
         if(index > tokenList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.AND || tokenList.get(index).getKind() == IToken.Kind.BITAND) {
+        if(tokenList.get(index).getKind() == IToken.Kind.AND) {
+            int i = index;
+            index++;
+            Expr expr2 = comparison_expr();
+            if(expr2 == null) {
+                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+            }
+            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
+        }
+        if(tokenList.get(index).getKind() == IToken.Kind.BITAND) {
             int i = index;
             index++;
             Expr expr2 = comparison_expr();
@@ -152,8 +170,8 @@ public class IParserImplementation implements IParser {
             return expr;
         }
         if(tokenList.get(index).getKind() == IToken.Kind.LT || tokenList.get(index).getKind() == IToken.Kind.GT || tokenList.get(index).getKind() == IToken.Kind.EQ || tokenList.get(index).getKind() == IToken.Kind.LE || tokenList.get(index).getKind() == IToken.Kind.GE) {
-            index++;
             int i = index;
+            index++;
             Expr expr2 = power_expr();
             if(expr2 == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
@@ -261,8 +279,8 @@ public class IParserImplementation implements IParser {
             if(expr == null) {
                 throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
             }
-            if(tokenList.get(index).getKind() != IToken.Kind.RPAREN) {
-                throw new SyntaxException("Expected a ) after " + tokenList.get(index).getKind());
+            if(index > tokenList.size() - 1) {
+                throw new SyntaxException("Expected a ) after " + tokenList.get(index-1).getKind());
             }
             index++;
             return expr;
@@ -299,15 +317,10 @@ public class IParserImplementation implements IParser {
         if(tokenList.get(index).getKind() == IToken.Kind.RPAREN) {
             throw new SyntaxException("Expected an expression before " + tokenList.get(index).getKind());
         }
-        checkInvalidFallThrough();
         index++;
         return new ZExpr(tokenList.get(index-1));
     }
 
-    boolean checkInvalidFallThrough() {
-        //this is for a base ZExpr to check to see if there's any invalid tokens
-        return tokenList.get(index).getKind() == IToken.Kind.DOT || tokenList.get(index).getKind() == IToken.Kind.COMMA || tokenList.get(index).getKind() == IToken.Kind.QUESTION || tokenList.get(index).getKind() == IToken.Kind.COLON || tokenList.get(index).getKind() == IToken.Kind.EQ || tokenList.get(index).getKind() == IToken.Kind.ASSIGN || tokenList.get(index).getKind() == IToken.Kind.EXCHANGE || tokenList.get(index).getKind() == IToken.Kind.LE || tokenList.get(index).getKind() == IToken.Kind.GE || tokenList.get(index).getKind() == IToken.Kind.BANG || tokenList.get(index).getKind() == IToken.Kind.BITAND || tokenList.get(index).getKind() == IToken.Kind.AND || tokenList.get(index).getKind() == IToken.Kind.BITOR || tokenList.get(index).getKind() == IToken.Kind.OR || tokenList.get(index).getKind() == IToken.Kind.PLUS || tokenList.get(index).getKind() == IToken.Kind.MINUS || tokenList.get(index).getKind() == IToken.Kind.TIMES || tokenList.get(index).getKind() == IToken.Kind.EXP || tokenList.get(index).getKind() == IToken.Kind.DIV || tokenList.get(index).getKind() == IToken.Kind.MOD || tokenList.get(index).getKind() == IToken.Kind.ERROR;
-    }
 
 
     private void getTokens(String input) throws PLCException {
