@@ -59,6 +59,42 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr conditional_expr() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            return null;
+        }
+        IToken firstToken = tokenList.get(index);
+        if(firstToken.getKind() == IToken.Kind.RES_if) {
+            index++;
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("Expected an expression after if");
+            }
+            if(index > tokenList.size() - 1) {
+                throw new SyntaxException("Expected a ? after the expression");
+            }
+            IToken question = tokenList.get(index);
+            if(question.getKind() != IToken.Kind.QUESTION) {
+                throw new SyntaxException("Expected a ? after the expression");
+            }
+            index++;
+            Expr expr2 = expr();
+            if(expr2 == null) {
+                throw new SyntaxException("Expected an expression after the ?");
+            }
+            if(index > tokenList.size() - 1) {
+                throw new SyntaxException("Expected a ? after the expression");
+            }
+            IToken question2 = tokenList.get(index);
+            if(question2.getKind() != IToken.Kind.QUESTION) {
+                throw new SyntaxException("Expected a ? after the expression");
+            }
+            index++;
+            Expr expr3 = expr();
+            if(expr3 == null) {
+                throw new SyntaxException("Expected an expression after the :");
+            }
+            return new ConditionalExpr(firstToken, expr, expr2, expr3);
+        }
         return null;
     }
 
