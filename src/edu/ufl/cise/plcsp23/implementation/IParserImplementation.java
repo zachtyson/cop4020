@@ -10,6 +10,8 @@ import java.util.Objects;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
+    private ArrayList<AST> tempASTList = new ArrayList<AST>();
+
 
     private ArrayList<IToken> tokenList = new ArrayList<IToken>();
     private int index = 0;
@@ -37,14 +39,48 @@ public class IParserImplementation implements IParser {
         if(input == null || input.isEmpty()) {
             throw new SyntaxException("Input is null or empty");
         }
+        //Convert ArrayList of tokens to ArrayList of ASTs
         getTokens(input);
-        while(true) {
+        for(IToken token : tokenList) {
+            if(token.getKind() == IToken.Kind.NUM_LIT) {
+                int x = token.getSourceLocation().line();
+                int y = token.getSourceLocation().column();
+                String n = token.getTokenString();
+                INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
+                NumLitExpr numLitExpr = new NumLitExpr(numLitToken);
+                ASTList.add(numLitExpr);
+            }
+            else if(token.getKind() == IToken.Kind.IDENT) {
+                IdentExpr identExpr = new IdentExpr(token);
+                ASTList.add(identExpr);
+            }
+            else if (token.getKind() == IToken.Kind.RES_rand) {
+                RandomExpr randomExpr = new RandomExpr(token);
+                ASTList.add(randomExpr);
+            }
+            else if (token.getKind() == IToken.Kind.STRING_LIT) {
+                int x = token.getSourceLocation().line();
+                int y = token.getSourceLocation().column();
+                String n = token.getTokenString();
+                IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
+                StringLitExpr stringLitExpr = new StringLitExpr(stringLitToken);
+                ASTList.add(stringLitExpr);
+            }
+            else {
+                ZExpr zExpr = new ZExpr(token);
+                ASTList.add(zExpr);
+            }
+        }
+        int iteration = 0;
+        do {
+            iteration++;
             AST ast = expr();
             if(ast == null) {
                 break;
             }
-            ASTList.add(ast);
-        }
+            tempASTList.add(ast);
+        } while (compareASTLists());
+        System.out.println("Iterations: " + iteration);
         System.out.println(ASTList.size());
         for(AST ast : ASTList) {
             System.out.println(ast.getFirstToken().getTokenString());
@@ -52,12 +88,20 @@ public class IParserImplementation implements IParser {
         //Iterate over ASTList and see if any ASTs can be reduced
         //If they can, reduce them
         //If they can't, move on to the next one
-        ArrayList<AST> prevIteration = new ArrayList<AST>();
-        
+
+    }
+
+    private boolean compareASTLists() {
+        if(ASTList.size() == tempASTList.size()) {
+            return false;
+        }
+        ASTList = tempASTList;
+        index = 0;
+        return true;
     }
 
     private Expr expr() throws PLCException {
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return null;
         }
         Expr expr = conditional_expr();
@@ -68,41 +112,49 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr conditional_expr() throws PLCException {
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return null;
         }
-        IToken firstToken = tokenList.get(index);
-        if(firstToken.getKind() == IToken.Kind.RES_if) {
+        AST ifexpr = ASTList.get(index);
+        if(ifexpr.getFirstToken().getKind() == IToken.Kind.RES_if) {
+            if(ifexpr instanceof ConditionalExpr) {
+                return null;
+            }
             index++;
             Expr expr = expr();
             if(expr == null) {
-                throw new SyntaxException("Expected an expression after if");
+                throw new SyntaxException("Expected expression1 after " + ifexpr.getFirstToken().getTokenString());
             }
-            if(index > tokenList.size() - 1) {
-                throw new SyntaxException("Expected a ? after the expression");
+            if(index > ASTList.size() - 1) {
+                throw new SyntaxException("Expected ? after " + ifexpr.getFirstToken().getTokenString());
             }
-            IToken question = tokenList.get(index);
-            if(question.getKind() != IToken.Kind.QUESTION) {
-                throw new SyntaxException("Expected a ? after the expression");
+            Expr question1 = (Expr)ASTList.get(index);
+            if(question1.getFirstToken().getKind() != IToken.Kind.QUESTION) {
+                //Add to list later since they may be able to be reduced but not now
+                tempASTList.add(ifexpr);
+                return question1;
             }
             index++;
             Expr expr2 = expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after the ?");
+                throw new SyntaxException("Expected expression2 after " + question1.getFirstToken().getTokenString());
             }
-            if(index > tokenList.size() - 1) {
-                throw new SyntaxException("Expected a ? after the expression");
+            if(index > ASTList.size() - 1) {
+                throw new SyntaxException("Expected ? after " + question1.getFirstToken().getTokenString());
             }
-            IToken question2 = tokenList.get(index);
-            if(question2.getKind() != IToken.Kind.QUESTION) {
-                throw new SyntaxException("Expected a ? after the expression");
+            Expr question2 = (Expr)ASTList.get(index);
+            if(question2.getFirstToken().getKind() != IToken.Kind.QUESTION) {
+                tempASTList.add(ifexpr);
+                tempASTList.add(question1);
+                tempASTList.add(expr2);
+                return question2;
             }
             index++;
             Expr expr3 = expr();
             if(expr3 == null) {
-                throw new SyntaxException("Expected an expression after the :");
+                throw new SyntaxException("Expected expression after " + question2.getFirstToken().getTokenString());
             }
-            return new ConditionalExpr(firstToken, expr, expr2, expr3);
+            return new ConditionalExpr(ifexpr.getFirstToken(),expr,expr2,expr3);
         }
         return null;
     }
@@ -112,20 +164,18 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is a | or || after the first and_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
 
-        //index works since the and_expr() method increments the index so that the next token is the one after the and_expr
-        IToken op = tokenList.get(index);
-        if(op.getKind() == IToken.Kind.OR || op.getKind() == IToken.Kind.BITOR) {
+        Expr op = (Expr)ASTList.get(index);
+        if(op.getFirstToken().getKind() == IToken.Kind.OR || op.getFirstToken().getKind() == IToken.Kind.BITOR) {
             index++;
             Expr expr2 = and_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + op.getKind());
+                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, op.getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
         return expr;
     }
@@ -135,27 +185,26 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is a & or && after the first comparison_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.AND) {
-            int i = index;
+
+        Expr op = (Expr)ASTList.get(index);
+        if(op.getFirstToken().getKind() == IToken.Kind.AND) {
             index++;
             Expr expr2 = comparison_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.BITAND) {
-            int i = index;
+        if(op.getFirstToken().getKind() == IToken.Kind.BITAND) {
             index++;
             Expr expr2 = comparison_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
         return expr;
     }
@@ -165,18 +214,17 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is <,>,==,<=,>= after the first power_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.LT || tokenList.get(index).getKind() == IToken.Kind.GT || tokenList.get(index).getKind() == IToken.Kind.EQ || tokenList.get(index).getKind() == IToken.Kind.LE || tokenList.get(index).getKind() == IToken.Kind.GE) {
-            int i = index;
+        AST ast = ASTList.get(index);
+        if(ast.firstToken.getKind() == IToken.Kind.EQ || ast.firstToken.getKind() == IToken.Kind.LT || ast.firstToken.getKind() == IToken.Kind.GT || ast.firstToken.getKind() == IToken.Kind.LE || ast.firstToken.getKind() == IToken.Kind.GE) {
             index++;
             Expr expr2 = power_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, tokenList.get(i).getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
     }
@@ -186,21 +234,17 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is ** after the first additive_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.EXP) {
-            IToken op = tokenList.get(index);
+        AST ast = ASTList.get(index);
+        if(ast.firstToken.getKind() == IToken.Kind.EXP) {
             index++;
-            Expr expr2 = power_expr();
+            Expr expr2 = additive_expr();
             if(expr2 == null) {
-                expr2 = additive_expr();
-                if(expr2 == null) {
-                    throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
-                }
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, op.getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
     }
@@ -210,22 +254,19 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is + or - after the first multiplicative_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.PLUS || tokenList.get(index).getKind() == IToken.Kind.MINUS) {
-            IToken op = tokenList.get(index);
+        AST ast = ASTList.get(index);
+        if(ast.firstToken.getKind() == IToken.Kind.PLUS || ast.firstToken.getKind() == IToken.Kind.MINUS) {
             index++;
-
             Expr expr2 = multiplicative_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, op.getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
-
     }
 
     private Expr multiplicative_expr() throws PLCException {
@@ -233,92 +274,86 @@ public class IParserImplementation implements IParser {
         if(expr == null) {
             return null;
         }
-        //check if there is *,/,% after the first unary_expr
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.TIMES || tokenList.get(index).getKind() == IToken.Kind.DIV || tokenList.get(index).getKind() == IToken.Kind.MOD) {
-            IToken op = tokenList.get(index);
+        AST ast = ASTList.get(index);
+        if(ast.firstToken.getKind() == IToken.Kind.TIMES || ast.firstToken.getKind() == IToken.Kind.DIV || ast.firstToken.getKind() == IToken.Kind.MOD) {
             index++;
             Expr expr2 = unary_expr();
             if(expr2 == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
-            return new BinaryExpr(expr.getFirstToken(),expr, op.getKind(), expr2);
+            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
     }
 
     private Expr unary_expr() throws PLCException {
-        //check if there is a !,-,sin,cos,atan
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return null;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.BANG || tokenList.get(index).getKind() == IToken.Kind.MINUS || tokenList.get(index).getKind() == IToken.Kind.RES_sin || tokenList.get(index).getKind() == IToken.Kind.RES_cos || tokenList.get(index).getKind() == IToken.Kind.RES_atan) {
-            IToken op = tokenList.get(index);
-            int i = index;
+        AST ast = ASTList.get(index);
+        IToken.Kind kind = ast.firstToken.getKind();
+        if(kind == IToken.Kind.BANG || kind == IToken.Kind.MINUS || kind == IToken.Kind.RES_sin || kind == IToken.Kind.RES_cos || kind == IToken.Kind.RES_atan) {
             index++;
             Expr expr = unary_expr();
             if(expr == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                return primary_expr();
             }
-            return new UnaryExpr(tokenList.get(i), op.getKind(), expr);
+            return new UnaryExpr(ast.firstToken,kind,expr);
         }
-
         return primary_expr();
     }
 
     private Expr primary_expr() throws PLCException {
-        //check if there is a (expr)
-        if(index > tokenList.size() - 1) {
+        if(index > ASTList.size() - 1) {
             return null;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.LPAREN) {
-            index++;
+        System.out.println("SUP" + ASTList.get(index).firstToken.getTokenString());
+        AST ast = ASTList.get(index);
+        index++;
+        if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
             Expr expr = expr();
             if(expr == null) {
-                throw new SyntaxException("Expected an expression after " + tokenList.get(index).getKind());
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
-            if(index > tokenList.size() - 1) {
-                throw new SyntaxException("Expected a ) after " + tokenList.get(index-1).getKind());
+            if(index > ASTList.size() - 1) {
+                throw new SyntaxException("Expected ) after expression");
             }
             index++;
             return expr;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.IDENT) {
-            index++;
-            return new IdentExpr(tokenList.get(index - 1));
-        }
-        if(tokenList.get(index).getKind() == IToken.Kind.NUM_LIT) {
-            index++;
-            //Create
-            int x = tokenList.get(index - 1).getSourceLocation().line();
-            int y = tokenList.get(index - 1).getSourceLocation().column();
-            String n = tokenList.get(index - 1).getTokenString();
+        if(ast.getFirstToken().getKind() == IToken.Kind.NUM_LIT) {
+            IToken token = ast.getFirstToken();
+            int x = token.getSourceLocation().line();
+            int y = token.getSourceLocation().column();
+            String n = token.getTokenString();
             INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
             return new NumLitExpr(numLitToken);
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.STRING_LIT) {
-            index++;
-            int x = tokenList.get(index - 1).getSourceLocation().line();
-            int y = tokenList.get(index - 1).getSourceLocation().column();
-            String n = tokenList.get(index - 1).getTokenString();
+        if(ast.getFirstToken().getKind() == IToken.Kind.STRING_LIT) {
+            IToken token = ast.getFirstToken();
+            int x = token.getSourceLocation().line();
+            int y = token.getSourceLocation().column();
+            String n = token.getTokenString();
             IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
             return new StringLitExpr(stringLitToken);
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.RES_rand) {
-            index++;
-            return new RandomExpr(tokenList.get(index - 1));
+        if(ast.getFirstToken().getKind() == IToken.Kind.IDENT) {
+            IToken token = ast.getFirstToken();
+            return new IdentExpr(token);
         }
-        //check for invalid token
-        if(tokenList.get(index).getKind() == IToken.Kind.EOF) {
+        if(ast.getFirstToken().getKind() == IToken.Kind.RES_rand) {
+            return new RandomExpr(ast.getFirstToken());
+        }
+        if(ast.getFirstToken().getKind() == IToken.Kind.EOF) {
             return null;
         }
-        if(tokenList.get(index).getKind() == IToken.Kind.RPAREN) {
-            throw new SyntaxException("Expected an expression before " + tokenList.get(index).getKind());
+        if(ast.getFirstToken().getKind() == IToken.Kind.RPAREN) {
+            throw new SyntaxException("Expected expression before " + ast.firstToken.getTokenString());
         }
-        index++;
-        return new ZExpr(tokenList.get(index-1));
+        return new ZExpr(ast.getFirstToken());
     }
 
 
