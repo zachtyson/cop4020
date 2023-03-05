@@ -12,7 +12,7 @@ public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
     private ArrayList<AST> tempASTList = new ArrayList<AST>();
 
-
+    int parenthesisCount = 0;
     private ArrayList<IToken> tokenList = new ArrayList<IToken>();
     private int index = 0;
 
@@ -72,23 +72,46 @@ public class IParserImplementation implements IParser {
             }
         }
         int iteration = 0;
-        do {
+
+        while(index < ASTList.size()) {
             iteration++;
             AST ast = expr();
             if(ast == null) {
-                break;
+                continue;
+            }
+            if(index > ASTList.size() - 1) {
+                if(!compareASTLists()) {
+                    break;
+                }
             }
             tempASTList.add(ast);
-        } while (compareASTLists());
+        }
         System.out.println("Iterations: " + iteration);
         System.out.println(ASTList.size());
         for(AST ast : ASTList) {
             System.out.println(ast.getFirstToken().getTokenString());
         }
-        //Iterate over ASTList and see if any ASTs can be reduced
-        //If they can, reduce them
-        //If they can't, move on to the next one
-
+        //Iterate over now reduced ASTList and see if there are any invalid ZExprs
+        //Example of invalid ZExpr are: parenthesis, operators, etc
+        for(AST ast : ASTList) {
+            System.out.println(ast.getClass());
+            if(ast instanceof ZExpr) {
+                switch (ast.getFirstToken().getKind()) {
+                    case RES_sin:
+                    case RES_cos:
+                    case EXP:
+                    case DIV:
+                    case MOD:
+                    case MINUS:
+                    case TIMES:
+                    case PLUS:
+                    case RES_if:
+                        throw new SyntaxException("Invalid expression: " + ast.getFirstToken().getTokenString());
+                    default:
+                        break;
+                }
+            }
+        }
     }
 
     private boolean compareASTLists() {
@@ -160,6 +183,7 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr or_expr() throws PLCException {
+
         Expr expr = and_expr();
         if(expr == null) {
             return null;
@@ -175,6 +199,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
+            IDK(op, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
         return expr;
@@ -196,6 +221,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
+            IDK(op, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
         if(op.getFirstToken().getKind() == IToken.Kind.BITAND) {
@@ -204,6 +230,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
             }
+            IDK(op, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
         }
         return expr;
@@ -224,6 +251,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
+            IDK(ast, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
@@ -241,6 +269,7 @@ public class IParserImplementation implements IParser {
         if(ast.firstToken.getKind() == IToken.Kind.EXP) {
             index++;
             Expr expr2 = additive_expr();
+            IDK(ast, expr2);
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
@@ -264,6 +293,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
+            IDK(ast, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
@@ -284,6 +314,7 @@ public class IParserImplementation implements IParser {
             if(expr2 == null) {
                 throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
             }
+            IDK(ast, expr2);
             return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
         }
         return expr;
@@ -301,16 +332,29 @@ public class IParserImplementation implements IParser {
             if(expr == null) {
                 return primary_expr();
             }
+            IDK(ast, expr);
             return new UnaryExpr(ast.firstToken,kind,expr);
         }
         return primary_expr();
+    }
+
+    private void IDK(AST ast, Expr expr) throws SyntaxException {
+        //This function is for checking to see if there's like two operators in a row or something
+        if(expr instanceof ZExpr) {
+            IToken.Kind k = expr.getFirstToken().getKind();
+            if(k == IToken.Kind.OR || k == IToken.Kind.AND || k == IToken.Kind.BITOR || k == IToken.Kind.BITAND || k == IToken.Kind.EQ || k == IToken.Kind.LT || k == IToken.Kind.GT || k == IToken.Kind.LE || k == IToken.Kind.GE || k == IToken.Kind.PLUS || k == IToken.Kind.MINUS || k == IToken.Kind.TIMES || k == IToken.Kind.DIV || k == IToken.Kind.MOD || k == IToken.Kind.EXP) {
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
+            }
+            if(k == IToken.Kind.RES_if) {
+                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
+            }
+        }
     }
 
     private Expr primary_expr() throws PLCException {
         if(index > ASTList.size() - 1) {
             return null;
         }
-        System.out.println("SUP" + ASTList.get(index).firstToken.getTokenString());
         AST ast = ASTList.get(index);
         index++;
         if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
