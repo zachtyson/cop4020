@@ -147,7 +147,7 @@ public class IParserImplementation implements IParser {
         }
         ArrayList<Statement> stmtList = new ArrayList<Statement>();
         while(true) {
-            //try to get a new statement, if it's null then we're done
+            //try to get a new statement, if it's null then we're done, this could technically just be an empty list
             Statement stmt = statement();
             if(stmt == null) {
                 break;
@@ -156,7 +156,110 @@ public class IParserImplementation implements IParser {
             consume(IToken.Kind.DOT);
             stmtList.add(stmt);
         }
+        return stmtList;
     }
+
+    private Statement statement() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //A statement can be one of the three following:
+        //A: LValue = Expr
+        //B: write Expr
+        //C: while Expr block
+        //so step one should be to check for each of these
+        //ugh that means I have to implement LValue
+        //It's pretty nice that like 90% of the code just sorta happens naturally, esp compared to the Scanner so I shouldn't complain
+        LValue lvalue = lvalue();
+        if(lvalue != null) {
+            //If it's an LValue it's an assignment statement
+            consume(IToken.Kind.ASSIGN);
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("Assignment statement must have an expression");
+                //Honestly not even sure if expr can be null here, it might be previously caught somewhere in expr()
+            }
+            return new AssignmentStatement(lvalue.getFirstToken(),lvalue, expr);
+        }
+        else if(match_kind(IToken.Kind.RES_write)) {
+            //If it's write then it's a write statement
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("Write statement must have an expression");
+            }
+            return new WriteStatement(expr.getFirstToken(), expr);
+        }
+        else if(match_kind(IToken.Kind.RES_while)) {
+            //If it's while then it's a while statement
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("While statement must have an expression");
+            }
+            Block block = block();
+            if(block == null) {
+                throw new SyntaxException("While statement must have a block");
+            }
+            return new WhileStatement(expr.getFirstToken(), expr, block);
+        }
+        return null;
+    }
+
+    private LValue lvalue() throws PLCException {
+        //LValue::= IDENT (PixelSelector|Epsilon) (ColorChannel|Epsilon)
+        //The grammar says ChannelSelector, but it's not in the given code so I'm assuming it's supposed to be ColorChannel
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        if(match_kind(IToken.Kind.IDENT)) {
+            IToken firstToken = previous();
+            Ident ident = new Ident(firstToken);
+            PixelSelector pixelSelector = pixel_selector();
+            ColorChannel channelSelector = channel_selector();
+            return new LValue(firstToken,ident, pixelSelector, channelSelector);
+        }
+        return null;
+    }
+
+    private PixelSelector pixel_selector() throws PLCException {
+        //PixelSelector::= [Expr,Expr] //basically the same as a pixel selector,but with one less expression
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //It's a name def B
+        IToken firstToken = current();
+        consume(IToken.Kind.LSQUARE);
+        Expr expr = expr();
+        if(expr == null) {
+            throw new SyntaxException("Expected an expression in dimension");
+        }
+        //Should be like [expr,expr]
+        consume(IToken.Kind.COMMA);
+        Expr expr2 = expr();
+        if(expr2 == null) {
+            throw new SyntaxException("Expected an expression in dimension");
+        }
+        consume(IToken.Kind.RSQUARE);
+        return new PixelSelector(firstToken,expr,expr2);
+    }
+
+    private ColorChannel channel_selector() throws PLCException {
+        //ChannelSelector::= : (r|g|b)
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        if(match_kind(IToken.Kind.COLON)) {
+            if(match_kind(IToken.Kind.RES_red, IToken.Kind.RES_grn, IToken.Kind.RES_blu)) {
+                return ColorChannel.getColor((previous()));
+            }
+        }
+        return null;
+    }
+
+
 
     private ArrayList<Declaration> declaration_list() throws PLCException {
         if(index > tokenList.size() - 1) {
@@ -210,24 +313,35 @@ public class IParserImplementation implements IParser {
             Ident ident = new Ident(previous());
             return new NameDef(token,type,null,ident);
         }
-        else if(match_kind(IToken.Kind.LSQUARE)) {
-            //It's a name def B
-            Expr expr = expr();
-            if(expr == null) {
-                throw new SyntaxException("Expected an expression in dimension");
-            }
-            //Should be like [expr,expr]
-            consume(IToken.Kind.COMMA);
-            Expr expr2 = expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected an expression in dimension");
-            }
-            consume(IToken.Kind.RSQUARE);
-            return new NameDef(token,type,new Dimension(expr.getFirstToken(),expr,expr2),new Ident(previous()));
+        else if(current().getKind().equals(IToken.Kind.LSQUARE)) {
+            Dimension dimension = dimension();
+            return new NameDef(token,type,dimension,new Ident(previous()));
         }
         else {
             throw new SyntaxException("Expected an identifier");
         }
+    }
+
+    private Dimension dimension() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //It's a name def B
+        IToken firstToken = current();
+        consume(IToken.Kind.LSQUARE);
+        Expr expr = expr();
+        if(expr == null) {
+            throw new SyntaxException("Expected an expression in dimension");
+        }
+        //Should be like [expr,expr]
+        consume(IToken.Kind.COMMA);
+        Expr expr2 = expr();
+        if(expr2 == null) {
+            throw new SyntaxException("Expected an expression in dimension");
+        }
+        consume(IToken.Kind.RSQUARE);
+        return new Dimension(firstToken,expr,expr2);
     }
 
     private Expr expr() throws PLCException {
