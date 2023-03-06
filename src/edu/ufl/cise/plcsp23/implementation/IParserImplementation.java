@@ -134,11 +134,207 @@ public class IParserImplementation implements IParser {
                 }
             }
         }
+
+
+
         if(ASTList.size() == tempASTList.size()) {
+//            reducePOW();
+//            reduceEQUALITYOP();
+//            reduceAND();
+//            reduceOR();
             return false;
         }
         ASTList = tempASTList;
         index = 0;
+        return true;
+    }
+
+    private boolean reduceOR() {
+        for(int i = 0; i < tempASTList.size(); i++ ){
+            AST ast = tempASTList.get(i);
+            if(i == tempASTList.size() - 1) {
+                break;
+            }
+            AST potentialOP = tempASTList.get(i + 1);
+            if(potentialOP instanceof ZExpr) {
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.BITOR) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.OR) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean reduceAND() {
+        for(int i = 0; i < tempASTList.size(); i++ ){
+            AST ast = tempASTList.get(i);
+            if(i == tempASTList.size() - 1) {
+                break;
+            }
+            AST potentialOP = tempASTList.get(i + 1);
+            if(potentialOP instanceof ZExpr) {
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.AND) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.BITAND) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean reduceEQUALITYOP() {
+        for(int i = 0; i < tempASTList.size(); i++ ){
+            AST ast = tempASTList.get(i);
+            if(i == tempASTList.size() - 1) {
+                break;
+            }
+            AST potentialOP = tempASTList.get(i + 1);
+            if(potentialOP instanceof ZExpr) {
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.GE) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.LE) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.EQ) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.GT) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.LT) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean reducePOW() {
+        for(int i = 0; i < tempASTList.size(); i++ ){
+            AST ast = tempASTList.get(i);
+            if(i == tempASTList.size() - 1) {
+                break;
+            }
+            AST potentialOP = tempASTList.get(i + 1);
+            if(potentialOP instanceof ZExpr) {
+                if(potentialOP.getFirstToken().getKind() == IToken.Kind.EXP) {
+                    if(i == tempASTList.size() - 2) {
+                        break;
+                    }
+                    AST ast2 = tempASTList.get(i + 2);
+
+                    if(!(ast2 instanceof ConditionalExpr)) {
+                        tempASTList.remove(i + 2);
+                        tempASTList.remove(i + 1);
+                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
+                        i--;
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     }
 
