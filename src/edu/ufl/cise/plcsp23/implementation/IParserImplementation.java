@@ -4,17 +4,19 @@ import com.sun.tools.jconsole.JConsoleContext;
 import edu.ufl.cise.plcsp23.*;
 import edu.ufl.cise.plcsp23.ast.*;
 
+import java.awt.*;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
-    private ArrayList<AST> tempASTList = new ArrayList<AST>();
 
-    int parenthesisCount = 0;
     private ArrayList<IToken> tokenList = new ArrayList<IToken>();
+
     private int index = 0;
+
+    boolean notFinished = true;
 
     private int parseReturnIndex = 0;
     @Override
@@ -35,311 +37,22 @@ public class IParserImplementation implements IParser {
     //multiplicative_expr = unary_expr (*//% unary_expr)* -- At least one unary_expr followed by zero or more */% unary_expr
 
     public IParserImplementation(String input) throws PLCException {
-        //System.out.println(input);
         if(input == null || input.isEmpty()) {
             throw new SyntaxException("Input is null or empty");
         }
         //Convert ArrayList of tokens to ArrayList of ASTs
         getTokens(input);
-        for(IToken token : tokenList) {
-            if(token.getKind() == IToken.Kind.NUM_LIT) {
-                int x = token.getSourceLocation().line();
-                int y = token.getSourceLocation().column();
-                String n = token.getTokenString();
-                INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
-                NumLitExpr numLitExpr = new NumLitExpr(numLitToken);
-                ASTList.add(numLitExpr);
-            }
-            else if(token.getKind() == IToken.Kind.IDENT) {
-                IdentExpr identExpr = new IdentExpr(token);
-                ASTList.add(identExpr);
-            }
-            else if (token.getKind() == IToken.Kind.RES_rand) {
-                RandomExpr randomExpr = new RandomExpr(token);
-                ASTList.add(randomExpr);
-            }
-            else if (token.getKind() == IToken.Kind.STRING_LIT) {
-                int x = token.getSourceLocation().line();
-                int y = token.getSourceLocation().column();
-                String n = token.getTokenString();
-                IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
-                StringLitExpr stringLitExpr = new StringLitExpr(stringLitToken);
-                ASTList.add(stringLitExpr);
-            }
-            else {
-                ZExpr zExpr = new ZExpr(token);
-                ASTList.add(zExpr);
+        while(notFinished) {
+            ASTList.add(expr());
+            if(index > tokenList.size() - 1) {
+                notFinished = false;
             }
         }
-        int iteration = 0;
-
-        while(index < ASTList.size()) {
-            iteration++;
-            AST ast = expr();
-            if(ast == null) {
-                continue;
-            }
-            if(index > ASTList.size() - 1) {
-                if(!compareASTLists()) {
-                    break;
-                }
-            }
-            tempASTList.add(ast);
-        }
-        System.out.println("Iterations: " + iteration);
-        System.out.println(ASTList.size());
-        for(AST ast : ASTList) {
-            System.out.println(ast.getFirstToken().getTokenString());
-        }
-        //Iterate over now reduced ASTList and see if there are any invalid ZExprs
-        //Example of invalid ZExpr are: parenthesis, operators, etc
-        for(AST ast : ASTList) {
-            System.out.println(ast.getClass());
-            if(ast instanceof ZExpr) {
-                switch (ast.getFirstToken().getKind()) {
-                    case RES_sin:
-                    case RES_cos:
-                    case EXP:
-                    case DIV:
-                    case MOD:
-                    case MINUS:
-                    case TIMES:
-                    case PLUS:
-                    case RES_if:
-                        throw new SyntaxException("Invalid expression: " + ast.getFirstToken().getTokenString());
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-
-    private boolean compareASTLists() {
-        //Iterate over and reduce
-        for(int i = 0; i < ASTList.size(); i++) {
-            AST ast = ASTList.get(i);
-            if(ast instanceof ZExpr) {
-                if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
-                    parenthesisCount++;
-                }
-                else if(ast.getFirstToken().getKind() == IToken.Kind.RPAREN) {
-                    parenthesisCount--;
-                }
-                if(parenthesisCount == 0) {
-                    if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
-                        ASTList.remove(i);
-                        ASTList.remove(i);
-                        i--;
-                    }
-                }
-            }
-        }
-
-
-
-        if(ASTList.size() == tempASTList.size()) {
-//            reducePOW();
-//            reduceEQUALITYOP();
-//            reduceAND();
-//            reduceOR();
-            return false;
-        }
-        ASTList = tempASTList;
-        index = 0;
-        return true;
-    }
-
-    private boolean reduceOR() {
-        for(int i = 0; i < tempASTList.size(); i++ ){
-            AST ast = tempASTList.get(i);
-            if(i == tempASTList.size() - 1) {
-                break;
-            }
-            AST potentialOP = tempASTList.get(i + 1);
-            if(potentialOP instanceof ZExpr) {
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.BITOR) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.OR) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean reduceAND() {
-        for(int i = 0; i < tempASTList.size(); i++ ){
-            AST ast = tempASTList.get(i);
-            if(i == tempASTList.size() - 1) {
-                break;
-            }
-            AST potentialOP = tempASTList.get(i + 1);
-            if(potentialOP instanceof ZExpr) {
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.AND) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.BITAND) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean reduceEQUALITYOP() {
-        for(int i = 0; i < tempASTList.size(); i++ ){
-            AST ast = tempASTList.get(i);
-            if(i == tempASTList.size() - 1) {
-                break;
-            }
-            AST potentialOP = tempASTList.get(i + 1);
-            if(potentialOP instanceof ZExpr) {
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.GE) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.LE) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.EQ) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.GT) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.LT) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean reducePOW() {
-        for(int i = 0; i < tempASTList.size(); i++ ){
-            AST ast = tempASTList.get(i);
-            if(i == tempASTList.size() - 1) {
-                break;
-            }
-            AST potentialOP = tempASTList.get(i + 1);
-            if(potentialOP instanceof ZExpr) {
-                if(potentialOP.getFirstToken().getKind() == IToken.Kind.EXP) {
-                    if(i == tempASTList.size() - 2) {
-                        break;
-                    }
-                    AST ast2 = tempASTList.get(i + 2);
-
-                    if(!(ast2 instanceof ConditionalExpr)) {
-                        tempASTList.remove(i + 2);
-                        tempASTList.remove(i + 1);
-                        tempASTList.set(i, new BinaryExpr(ast.getFirstToken(), (Expr) ast, potentialOP.getFirstToken().getKind(), (Expr) ast2));
-                        i--;
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
     }
 
     private Expr expr() throws PLCException {
-        if(index > ASTList.size() - 1) {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
             return null;
         }
         Expr expr = conditional_expr();
@@ -350,269 +63,177 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr conditional_expr() throws PLCException {
-        if(index > ASTList.size() - 1) {
-            return null;
-        }
-        AST ifexpr = ASTList.get(index);
-        if(ifexpr.getFirstToken().getKind() == IToken.Kind.RES_if) {
-            if(ifexpr instanceof ConditionalExpr) {
-                return null;
+        if(match_kind(IToken.Kind.RES_if)) {
+            Expr expr1 = expr();
+            if(match_kind(IToken.Kind.QUESTION)) {
+                Expr expr2 = expr();
+                if(match_kind(IToken.Kind.QUESTION)) {
+                    Expr expr3 = expr();
+                    return new ConditionalExpr(previous(), expr1, expr2, expr3);
+                }
+                else {
+                    throw new SyntaxException("Expected '?'");
+                }
             }
-            index++;
-            Expr expr = expr();
-            if(expr == null) {
-                throw new SyntaxException("Expected expression1 after " + ifexpr.getFirstToken().getTokenString());
+            else {
+                throw new SyntaxException("Expected '?'");
             }
-            if(index > ASTList.size() - 1) {
-                throw new SyntaxException("Expected ? after " + ifexpr.getFirstToken().getTokenString());
-            }
-            Expr question1 = (Expr)ASTList.get(index);
-            if(question1.getFirstToken().getKind() != IToken.Kind.QUESTION) {
-                //Add to list later since they may be able to be reduced but not now
-                tempASTList.add(ifexpr);
-                return question1;
-            }
-            index++;
-            Expr expr2 = expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression2 after " + question1.getFirstToken().getTokenString());
-            }
-            if(index > ASTList.size() - 1) {
-                throw new SyntaxException("Expected ? after " + question1.getFirstToken().getTokenString());
-            }
-            Expr question2 = (Expr)ASTList.get(index);
-            if(question2.getFirstToken().getKind() != IToken.Kind.QUESTION) {
-                tempASTList.add(ifexpr);
-                tempASTList.add(question1);
-                tempASTList.add(expr2);
-                return question2;
-            }
-            index++;
-            Expr expr3 = expr();
-            if(expr3 == null) {
-                throw new SyntaxException("Expected expression after " + question2.getFirstToken().getTokenString());
-            }
-            return new ConditionalExpr(ifexpr.getFirstToken(),expr,expr2,expr3);
         }
         return null;
     }
 
     private Expr or_expr() throws PLCException {
-
         Expr expr = and_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-
-        Expr op = (Expr)ASTList.get(index);
-        if(op.getFirstToken().getKind() == IToken.Kind.OR || op.getFirstToken().getKind() == IToken.Kind.BITOR) {
-            index++;
-            Expr expr2 = and_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
-            }
-            IDK(op, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
+        while(match_kind(IToken.Kind.OR, IToken.Kind.BITOR)) {
+            IToken.Kind kind = previous().getKind();
+            expr = new BinaryExpr(previous(), expr, kind, and_expr());
         }
         return expr;
     }
 
     private Expr and_expr() throws PLCException {
         Expr expr = comparison_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-
-        Expr op = (Expr)ASTList.get(index);
-        if(op.getFirstToken().getKind() == IToken.Kind.AND) {
-            index++;
-            Expr expr2 = comparison_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
-            }
-            IDK(op, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
-        }
-        if(op.getFirstToken().getKind() == IToken.Kind.BITAND) {
-            index++;
-            Expr expr2 = comparison_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + op.getFirstToken().getTokenString());
-            }
-            IDK(op, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,op.getFirstToken().getKind(),expr2);
+        while(match_kind(IToken.Kind.AND, IToken.Kind.BITAND)) {
+            IToken.Kind kind = previous().getKind();
+            expr =  new BinaryExpr(previous(), expr, kind, comparison_expr());
         }
         return expr;
     }
 
     private Expr comparison_expr() throws PLCException {
         Expr expr = power_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-        AST ast = ASTList.get(index);
-        if(ast.firstToken.getKind() == IToken.Kind.EQ || ast.firstToken.getKind() == IToken.Kind.LT || ast.firstToken.getKind() == IToken.Kind.GT || ast.firstToken.getKind() == IToken.Kind.LE || ast.firstToken.getKind() == IToken.Kind.GE) {
-            index++;
-            Expr expr2 = power_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            IDK(ast, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
+        while(match_kind(IToken.Kind.EQ, IToken.Kind.LT, IToken.Kind.GT, IToken.Kind.LE, IToken.Kind.GE)) {
+            IToken.Kind kind = previous().getKind();
+            expr  = new BinaryExpr(previous(), expr, kind, power_expr());
         }
         return expr;
     }
 
     private Expr power_expr() throws PLCException {
         Expr expr = additive_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-        AST ast = ASTList.get(index);
-        if(ast.firstToken.getKind() == IToken.Kind.EXP) {
-            index++;
-            Expr expr2 = additive_expr();
-            IDK(ast, expr2);
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
+        while(match_kind(IToken.Kind.EXP)) {
+            IToken.Kind kind = previous().getKind();
+            expr = new BinaryExpr(previous(), expr, kind, power_expr());
         }
         return expr;
     }
 
     private Expr additive_expr() throws PLCException {
         Expr expr = multiplicative_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-        AST ast = ASTList.get(index);
-        if(ast.firstToken.getKind() == IToken.Kind.PLUS || ast.firstToken.getKind() == IToken.Kind.MINUS) {
-            index++;
-            Expr expr2 = multiplicative_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            IDK(ast, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
+        while(match_kind(IToken.Kind.PLUS, IToken.Kind.MINUS)) {
+            IToken.Kind kind = previous().getKind();
+            expr = new BinaryExpr(previous(), expr, kind, multiplicative_expr());
         }
         return expr;
     }
 
     private Expr multiplicative_expr() throws PLCException {
         Expr expr = unary_expr();
-        if(expr == null) {
-            return null;
-        }
-        if(index > ASTList.size() - 1) {
-            return expr;
-        }
-        AST ast = ASTList.get(index);
-        if(ast.firstToken.getKind() == IToken.Kind.TIMES || ast.firstToken.getKind() == IToken.Kind.DIV || ast.firstToken.getKind() == IToken.Kind.MOD) {
-            index++;
-            Expr expr2 = unary_expr();
-            if(expr2 == null) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            IDK(ast, expr2);
-            return new BinaryExpr(expr.getFirstToken(),expr,ast.firstToken.getKind(),expr2);
+        while(match_kind(IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD)) {
+            IToken.Kind kind = previous().getKind();
+            expr = new BinaryExpr(previous(), expr, kind, unary_expr());
         }
         return expr;
     }
 
     private Expr unary_expr() throws PLCException {
-        if(index > ASTList.size() - 1) {
-            return null;
-        }
-        AST ast = ASTList.get(index);
-        IToken.Kind kind = ast.firstToken.getKind();
-        if(kind == IToken.Kind.BANG || kind == IToken.Kind.MINUS || kind == IToken.Kind.RES_sin || kind == IToken.Kind.RES_cos || kind == IToken.Kind.RES_atan) {
-            index++;
-            Expr expr = unary_expr();
-            if(expr == null) {
-                return primary_expr();
-            }
-            IDK(ast, expr);
-            return new UnaryExpr(ast.firstToken,kind,expr);
+        while(match_kind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.RES_sin, IToken.Kind.RES_cos, IToken.Kind.RES_atan)) {
+            IToken.Kind kind = previous().getKind();
+            return new UnaryExpr(previous(), kind, unary_expr());
         }
         return primary_expr();
     }
 
-    private void IDK(AST ast, Expr expr) throws SyntaxException {
-        //This function is for checking to see if there's like two operators in a row or something
-        if(expr instanceof ZExpr) {
-            IToken.Kind k = expr.getFirstToken().getKind();
-            if(k == IToken.Kind.OR || k == IToken.Kind.AND || k == IToken.Kind.BITOR || k == IToken.Kind.BITAND || k == IToken.Kind.EQ || k == IToken.Kind.LT || k == IToken.Kind.GT || k == IToken.Kind.LE || k == IToken.Kind.GE || k == IToken.Kind.PLUS || k == IToken.Kind.MINUS || k == IToken.Kind.TIMES || k == IToken.Kind.DIV || k == IToken.Kind.MOD || k == IToken.Kind.EXP) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            if(k == IToken.Kind.RES_if) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-        }
-    }
-
     private Expr primary_expr() throws PLCException {
-        if(index > ASTList.size() - 1) {
-            return null;
-        }
-        AST ast = ASTList.get(index);
-        index++;
-        if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
-            Expr expr = expr();
-            if(expr == null) {
-                throw new SyntaxException("Expected expression after " + ast.firstToken.getTokenString());
-            }
-            if(index > ASTList.size() - 1) {
-                throw new SyntaxException("Expected ) after expression");
-            }
-            index++;
-            return expr;
-        }
-        if(ast.getFirstToken().getKind() == IToken.Kind.NUM_LIT) {
-            IToken token = ast.getFirstToken();
+        IToken token = current();
+        IToken.Kind k = token.getKind();
+        if(k == IToken.Kind.NUM_LIT) {
             int x = token.getSourceLocation().line();
             int y = token.getSourceLocation().column();
             String n = token.getTokenString();
             INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
+            consume(IToken.Kind.NUM_LIT);
             return new NumLitExpr(numLitToken);
         }
-        if(ast.getFirstToken().getKind() == IToken.Kind.STRING_LIT) {
-            IToken token = ast.getFirstToken();
+        else if(k == IToken.Kind.IDENT) {
+            consume(IToken.Kind.IDENT);
+            return new IdentExpr(token);
+        }
+        else if (k == IToken.Kind.RES_rand) {
+            consume(IToken.Kind.RES_rand);
+            return new RandomExpr(token);
+        }
+        else if (k == IToken.Kind.STRING_LIT) {
             int x = token.getSourceLocation().line();
             int y = token.getSourceLocation().column();
             String n = token.getTokenString();
             IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
+            consume(IToken.Kind.STRING_LIT);
             return new StringLitExpr(stringLitToken);
         }
-        if(ast.getFirstToken().getKind() == IToken.Kind.IDENT) {
-            IToken token = ast.getFirstToken();
-            return new IdentExpr(token);
+        else if (k == IToken.Kind.LPAREN) {
+            consume(IToken.Kind.LPAREN);
+            Expr expr = expr();
+            consume(IToken.Kind.RPAREN);
+            return expr;
         }
-        if(ast.getFirstToken().getKind() == IToken.Kind.RES_rand) {
-            return new RandomExpr(ast.getFirstToken());
+        else if (match_kind(IToken.Kind.OR, IToken.Kind.BITOR, IToken.Kind.AND, IToken.Kind.BITAND, IToken.Kind.LE,
+                IToken.Kind.GE, IToken.Kind.GT, IToken.Kind.LT, IToken.Kind.EQ, IToken.Kind.EXP, IToken.Kind.PLUS,
+                IToken.Kind.MINUS, IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD, IToken.Kind.BANG, IToken.Kind.QUESTION) ) {
+            throw new SyntaxException("Unexpected token: " + current().getTokenString());
         }
-        if(ast.getFirstToken().getKind() == IToken.Kind.EOF) {
-            return null;
+        else if (k == IToken.Kind.RPAREN|| k == IToken.Kind.RSQUARE || k == IToken.Kind.RCURLY) {
+            throw new SyntaxException("Unexpected token: " + current().getTokenString());
         }
-        if(ast.getFirstToken().getKind() == IToken.Kind.RPAREN) {
-            throw new SyntaxException("Expected expression before " + ast.firstToken.getTokenString());
+        else {
+            consume(token.getKind());
+            return new ZExpr(token);
         }
-        return new ZExpr(ast.getFirstToken());
+    }
+
+    private boolean match_kind(IToken.Kind... kinds) {
+        for(IToken.Kind kind : kinds) {
+            if(check(kind)) {
+                advance();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private IToken consume(IToken.Kind kind) throws PLCException {
+        if(index > tokenList.size() - 1) {
+            throw new SyntaxException("Unexpected end of input");
+        }
+        if(check(kind)) {
+            return advance();
+        }
+        throw new SyntaxException("Unexpected token: " + current().getTokenString());
+    }
+
+    private IToken advance() {
+        if(index < tokenList.size()) {
+            index++;
+        }
+        return previous();
+    }
+
+    private boolean check(IToken.Kind kind) {
+        if(index > tokenList.size() - 1) {
+            return false;
+        }
+        return tokenList.get(index).getKind() == kind;
+    }
+
+    private IToken previous() {
+        return tokenList.get(index - 1);
+    }
+
+    private IToken current() throws SyntaxException {
+        if(index > tokenList.size() - 1) {
+            throw new SyntaxException("Unexpected end of input, expected token");
+        }
+        return tokenList.get(index);
     }
 
 
@@ -631,5 +252,6 @@ public class IParserImplementation implements IParser {
         if(tokenList.size() == 0) {
             throw new SyntaxException("No tokens to parse");
         }
+
     }
 }
