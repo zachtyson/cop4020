@@ -44,15 +44,11 @@ public class IParserImplementation implements IParser {
         }
         //Convert ArrayList of tokens to ArrayList of ASTs
         getTokens(input);
-        try {
-            while(notFinished) {
-                ASTList.add(program());
-                if(index > tokenList.size() - 1) {
-                    notFinished = false;
-                }
+        while(notFinished) {
+            ASTList.add(program());
+            if(index > tokenList.size() - 1) {
+                notFinished = false;
             }
-        } catch (PLCException e) {
-            throw new SyntaxException(e.getMessage());
         }
     }
 
