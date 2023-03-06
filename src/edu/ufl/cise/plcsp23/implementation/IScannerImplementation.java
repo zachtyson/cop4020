@@ -19,7 +19,7 @@ public class IScannerImplementation implements IScanner {
         for (IToken token : tokens) {
             if (token.getKind().equals(NUM_LIT)) {
                 try {
-                    int val = Integer.parseInt(token.getTokenString());
+                    double val = Double.parseDouble(token.getTokenString());
                 } catch (NumberFormatException e) {
                     throw new LexicalException("Number out of bounds");
                 }
