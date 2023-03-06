@@ -13,54 +13,39 @@ package edu.ufl.cise.plcsp23.ast;
 import java.util.Objects;
 
 import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.IToken.Kind;
 import edu.ufl.cise.plcsp23.PLCException;
 
-public class BinaryExpr extends Expr {
-	
-	Expr left;
-	Kind op;
-	Expr right;
+public class AssignmentStatement extends Statement {
 
+	final LValue lv;
+	final Expr e;
 
-
-	public BinaryExpr(IToken firstToken, Expr left, Kind op, Expr right) {
+	public AssignmentStatement(IToken firstToken, LValue lv, Expr e) {
 		super(firstToken);
-		this.left = left;
-		this.op = op;
-		this.right = right;		
+		this.lv = lv;
+		this.e = e;
 	}
-
 
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws PLCException {
-		return v.visitBinaryExpr(this, arg);
+		return v.visitAssignmentStatement(this, arg);
 	}
 
-
-	public Expr getLeft() {
-		return left;
+	public LValue getLv() {
+		return lv;
 	}
 
-
-	public Kind getOp() {
-		return op;
+	public Expr getE() {
+		return e;
 	}
-
-
-	public Expr getRight() {
-		return right;
-	}
-
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + Objects.hash(left, op, right);
+		result = prime * result + Objects.hash(e, lv);
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -70,16 +55,13 @@ public class BinaryExpr extends Expr {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		BinaryExpr other = (BinaryExpr) obj;
-		return Objects.equals(left, other.left) && op == other.op && Objects.equals(right, other.right);
+		AssignmentStatement other = (AssignmentStatement) obj;
+		return Objects.equals(e, other.e) && Objects.equals(lv, other.lv);
 	}
-
 
 	@Override
 	public String toString() {
-		return "BinaryExpr [left=" + left + ", op=" + op + ", right=" + right + "]";
+		return "AssignmentStatement [lv=" + lv + ", e=" + e + "]";
 	}
-	
-	
 
 }

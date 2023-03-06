@@ -26,5 +26,10 @@ public class CompilerComponentFactory {
 		//Add statement to return an instance of your parser
 		return new IParserImplementation(input);
 	}
+
+	public static IParser makeParser(String input) throws PLCException {
+		//Add statement to return an instance of your parser
+		return new IParserImplementation(input);
+	}
 }
 

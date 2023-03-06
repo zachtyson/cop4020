@@ -10,57 +10,55 @@
 
 package edu.ufl.cise.plcsp23.ast;
 
+import java.util.List;
 import java.util.Objects;
 
 import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.IToken.Kind;
 import edu.ufl.cise.plcsp23.PLCException;
 
-public class BinaryExpr extends Expr {
-	
-	Expr left;
-	Kind op;
-	Expr right;
+public class Program extends AST {
 
+	final Type type;
+	final Ident ident;
+	final List<NameDef> paramList;
+	final Block block;
 
-
-	public BinaryExpr(IToken firstToken, Expr left, Kind op, Expr right) {
+	public Program(IToken firstToken, Type type, Ident ident, List<NameDef> paramList, Block block) {
 		super(firstToken);
-		this.left = left;
-		this.op = op;
-		this.right = right;		
+		this.type = type;
+		this.ident = ident;
+		this.paramList = paramList;
+		this.block = block;
 	}
-
 
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws PLCException {
-		return v.visitBinaryExpr(this, arg);
+		return v.visitProgram(this, arg);
 	}
 
-
-	public Expr getLeft() {
-		return left;
+	public Type getType() {
+		return type;
 	}
 
-
-	public Kind getOp() {
-		return op;
+	public Ident getIdent() {
+		return ident;
 	}
 
-
-	public Expr getRight() {
-		return right;
+	public List<NameDef> getParamList() {
+		return paramList;
 	}
 
+	public Block getBlock() {
+		return block;
+	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + Objects.hash(left, op, right);
+		result = prime * result + Objects.hash(block, ident, paramList, type);
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -70,16 +68,10 @@ public class BinaryExpr extends Expr {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		BinaryExpr other = (BinaryExpr) obj;
-		return Objects.equals(left, other.left) && op == other.op && Objects.equals(right, other.right);
+		Program other = (Program) obj;
+		return Objects.equals(block, other.block) && Objects.equals(ident, other.ident)
+				&& Objects.equals(paramList, other.paramList) && type == other.type;
 	}
 
-
-	@Override
-	public String toString() {
-		return "BinaryExpr [left=" + left + ", op=" + op + ", right=" + right + "]";
-	}
 	
-	
-
 }
