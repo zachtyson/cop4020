@@ -115,6 +115,25 @@ public class IParserImplementation implements IParser {
     }
 
     private boolean compareASTLists() {
+        //Iterate over and reduce
+        for(int i = 0; i < ASTList.size(); i++) {
+            AST ast = ASTList.get(i);
+            if(ast instanceof ZExpr) {
+                if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
+                    parenthesisCount++;
+                }
+                else if(ast.getFirstToken().getKind() == IToken.Kind.RPAREN) {
+                    parenthesisCount--;
+                }
+                if(parenthesisCount == 0) {
+                    if(ast.getFirstToken().getKind() == IToken.Kind.LPAREN) {
+                        ASTList.remove(i);
+                        ASTList.remove(i);
+                        i--;
+                    }
+                }
+            }
+        }
         if(ASTList.size() == tempASTList.size()) {
             return false;
         }
