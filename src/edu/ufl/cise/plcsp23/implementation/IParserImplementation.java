@@ -434,6 +434,17 @@ public class IParserImplementation implements IParser {
         return primary_expr();
     }
 
+    private UnaryExprPostfix unary_expr_postfix() throws PLCException {
+        Expr expr = primary_expr();
+        if(expr == null) {
+            return null;
+        }
+        //unary_expr_postfix is a primary_expr, and can have a pixelselector, or a colorchannel
+        PixelSelector pixelSelector = pixel_selector();
+        ColorChannel colorChannel = channel_selector();
+        return new UnaryExprPostfix(previous(), expr, pixelSelector, colorChannel);
+    }
+
     private Expr primary_expr() throws PLCException {
         IToken token = current();
         IToken.Kind k = token.getKind();
@@ -467,6 +478,10 @@ public class IParserImplementation implements IParser {
             consume(IToken.Kind.RPAREN);
             return expr;
         }
+        else if (k == IToken.Kind.LSQUARE) {
+            Expr epxr = expanded_pixel_expr();
+            return epxr;
+        }
         else if (match_kind(IToken.Kind.OR, IToken.Kind.BITOR, IToken.Kind.AND, IToken.Kind.BITAND, IToken.Kind.LE,
                 IToken.Kind.GE, IToken.Kind.GT, IToken.Kind.LT, IToken.Kind.EQ, IToken.Kind.EXP, IToken.Kind.PLUS,
                 IToken.Kind.MINUS, IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD, IToken.Kind.BANG, IToken.Kind.QUESTION) ) {
@@ -479,6 +494,22 @@ public class IParserImplementation implements IParser {
             consume(token.getKind());
             return new ZExpr(token);
         }
+    }
+
+    private Expr pixel_function_expr() throws PLCException {
+        //todo
+    }
+    private Expr expanded_pixel_expr() throws PLCException {
+        //an expanded pixel expr is formatted as so: [expr,expr, expr]
+        IToken token = current();
+        consume(IToken.Kind.LSQUARE);
+        Expr expr1 = expr();
+        consume(IToken.Kind.COMMA);
+        Expr expr2 = expr();
+        consume(IToken.Kind.COMMA);
+        Expr expr3 = expr();
+        consume(IToken.Kind.RSQUARE);
+        return new ExpandedPixelExpr(token, expr1, expr2, expr3);
     }
 
     private boolean match_kind(IToken.Kind... kinds) {
