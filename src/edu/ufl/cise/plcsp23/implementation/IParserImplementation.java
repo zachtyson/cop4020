@@ -3,7 +3,9 @@ package edu.ufl.cise.plcsp23.implementation;
 import com.sun.tools.jconsole.JConsoleContext;
 import edu.ufl.cise.plcsp23.*;
 import edu.ufl.cise.plcsp23.ast.*;
+import edu.ufl.cise.plcsp23.ast.Dimension;
 
+import javax.swing.plaf.nimbus.State;
 import java.awt.*;
 import java.io.Console;
 import java.util.ArrayList;
@@ -42,11 +44,189 @@ public class IParserImplementation implements IParser {
         }
         //Convert ArrayList of tokens to ArrayList of ASTs
         getTokens(input);
-        while(notFinished) {
-            ASTList.add(expr());
-            if(index > tokenList.size() - 1) {
-                notFinished = false;
+        try {
+            while(notFinished) {
+                ASTList.add(program());
+                if(index > tokenList.size() - 1) {
+                    notFinished = false;
+                }
             }
+        } catch (PLCException e) {
+            throw new SyntaxException(e.getMessage());
+        }
+    }
+
+    private Program program() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        Type type = type();
+        if(type == null) {
+            throw new SyntaxException("Program must have a type");
+            //If there's no type then it's not a program
+        }
+        Ident ident = ident();
+        //If there's no ident then it's not a program
+        if(ident == null) {
+            throw new SyntaxException("Program must have an identifier");
+            //Honestly not sure if I should be throwing exceptions yet 'cause I haven't read the whole assignment
+        }
+        consume(IToken.Kind.LPAREN);
+        ArrayList<NameDef> paramList = param_list();
+        consume(IToken.Kind.RPAREN);
+
+        //After this it's a block, so we'll call block()
+        Block block = block();
+
+        return null;
+    }
+
+    private Type type() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //A type can either be : int, pixel, image, string, or void
+        //If it is not one of these, then it is not a type
+        if(match_kind(IToken.Kind.RES_int, IToken.Kind.RES_pixel, IToken.Kind.RES_image, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
+            return Type.getType(previous());
+        }
+        return null;
+    }
+
+    private Ident ident() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        if(match_kind(IToken.Kind.IDENT)) {
+            return new Ident(previous());
+        }
+        return null;
+    }
+
+    private ArrayList<NameDef> param_list() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        ArrayList<NameDef> paramList = new ArrayList<NameDef>();
+        //A name def is either A: a type followed by an ident or B: a type followed by a dimension followed by an ident
+        do {
+            NameDef nameDef = name_def();
+            if(nameDef == null) {
+                break;
+            }
+            paramList.add(nameDef);
+        } while(match_kind(IToken.Kind.COMMA)); //do while loop since we need to check for at least one name def which wouldn't have a comma before it
+        return paramList;
+    }
+
+    private Block block() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //a block is a list of declarations followed by a list of statements
+        IToken firstToken = current();
+        consume(IToken.Kind.LCURLY); //We know it's a block if it starts with a left curly brace
+        //declarations and statements are separated by periods (.), personally a weird choice but whatever
+        ArrayList<Declaration> decList = new ArrayList<Declaration>();
+        decList = declaration_list();
+        ArrayList<Statement> stmtList = new ArrayList<Statement>();
+        stmtList = statement_list();
+        return new Block(firstToken, decList, stmtList);
+
+    }
+
+    private ArrayList<Statement> statement_list() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        ArrayList<Statement> stmtList = new ArrayList<Statement>();
+        while(true) {
+            //try to get a new statement, if it's null then we're done
+            Statement stmt = statement();
+            if(stmt == null) {
+                break;
+            }
+            //There is a period after each statement, similar to how there is a semicolon after each statement in many languages
+            consume(IToken.Kind.DOT);
+            stmtList.add(stmt);
+        }
+    }
+
+    private ArrayList<Declaration> declaration_list() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        ArrayList<Declaration> decList = new ArrayList<Declaration>();
+        while(true) {
+            //try to get a new declaration, if it's null then we're done
+            Declaration dec = declaration();
+            if(dec == null) {
+                break;
+            }
+            //There is a period after each declaration, similar to how there is a semicolon after each statement in many languages
+            consume(IToken.Kind.DOT);
+            decList.add(dec);
+        }
+        return decList;
+    }
+
+    private Declaration declaration() throws PLCException {
+        if(index > tokenList.size() - 1) {
+            notFinished = false;
+            return null;
+        }
+        //A declaration is either just a name def or a name def followed by an assignment (=Expr)
+        NameDef nameDef = name_def();
+        if(nameDef == null) {
+            return null;
+        }
+        if(match_kind(IToken.Kind.ASSIGN)) {
+            Expr expr = expr();
+            if (expr == null) {
+                throw new SyntaxException("Expected an expression after =");
+            }
+            return new Declaration(nameDef.firstToken,nameDef, expr);
+        }
+        return new Declaration(nameDef.firstToken,nameDef, null);
+    }
+
+    private NameDef name_def() throws PLCException {
+        if(!match_kind(IToken.Kind.RES_int, IToken.Kind.RES_pixel, IToken.Kind.RES_image, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
+            return null;
+        }
+        //That gets the type
+        IToken token = previous();
+        Type type = Type.getType(previous());
+        //Now we need to check if it's a name def A or B
+        if(match_kind(IToken.Kind.IDENT)) {
+            //It's a name def A
+            Ident ident = new Ident(previous());
+            return new NameDef(token,type,null,ident);
+        }
+        else if(match_kind(IToken.Kind.LSQUARE)) {
+            //It's a name def B
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("Expected an expression in dimension");
+            }
+            //Should be like [expr,expr]
+            consume(IToken.Kind.COMMA);
+            Expr expr2 = expr();
+            if(expr2 == null) {
+                throw new SyntaxException("Expected an expression in dimension");
+            }
+            consume(IToken.Kind.RSQUARE);
+            return new NameDef(token,type,new Dimension(expr.getFirstToken(),expr,expr2),new Ident(previous()));
+        }
+        else {
+            throw new SyntaxException("Expected an identifier");
         }
     }
 
@@ -201,12 +381,14 @@ public class IParserImplementation implements IParser {
         return false;
     }
 
-    private IToken consume(IToken.Kind kind) throws PLCException {
+    private IToken consume(IToken.Kind... kind) throws PLCException {
         if(index > tokenList.size() - 1) {
             throw new SyntaxException("Unexpected end of input");
         }
-        if(check(kind)) {
-            return advance();
+        for(IToken.Kind k : kind) {
+            if(check(k)) {
+                return advance();
+            }
         }
         throw new SyntaxException("Unexpected token: " + current().getTokenString());
     }
