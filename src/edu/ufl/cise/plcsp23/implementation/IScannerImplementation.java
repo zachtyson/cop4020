@@ -205,7 +205,7 @@ public class IScannerImplementation implements IScanner {
                     //Remove whitespace
                     currentToken = currentToken.trim();
                     String[] reservedWords = {"image", "pixel", "int", "string", "void", "nil", "load", "display", "write",
-                            "x", "y", "a", "r", "X", "Y", "Z", "x_cart", "y_cart", "a_polar", "r_polar", "rand", "sin", "cos", "atan", "if", "while"};
+                            "x", "y", "a", "r", "X", "Y", "Z", "x_cart", "y_cart", "a_polar", "r_polar", "rand", "sin", "cos", "atan", "if", "while","red","grn","blu"};
                     //check if currentToken is a reserved word
                     for (String reservedWord : reservedWords) {
                         if (currentToken.equals(reservedWord)) {
