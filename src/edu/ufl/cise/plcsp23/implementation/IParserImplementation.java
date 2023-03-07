@@ -196,7 +196,6 @@ public class IParserImplementation implements IParser {
         }
         else if(match_kind(IToken.Kind.RES_while)) {
             //If it's while then it's a while statement
-            System.out.println("While statement");
             Expr expr = expr();
             if(expr == null) {
                 throw new SyntaxException("While statement must have an expression");
@@ -205,7 +204,6 @@ public class IParserImplementation implements IParser {
             if(block == null) {
                 throw new SyntaxException("While statement must have a block");
             }
-            System.out.println("While exited");
             return new WhileStatement(expr.getFirstToken(), expr, block);
         }
         return null;
@@ -481,7 +479,6 @@ public class IParserImplementation implements IParser {
             return new NumLitExpr(numLitToken);
         }
         else if(k == IToken.Kind.IDENT) {
-            System.out.println("IDENT"+token.getTokenString());
             consume(IToken.Kind.IDENT);
 
             return new IdentExpr(token);
