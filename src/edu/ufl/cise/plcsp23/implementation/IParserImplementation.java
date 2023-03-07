@@ -9,6 +9,7 @@ import javax.swing.plaf.nimbus.State;
 import java.awt.*;
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class IParserImplementation implements IParser {
@@ -57,6 +58,7 @@ public class IParserImplementation implements IParser {
             notFinished = false;
             return null;
         }
+        IToken firstToken = current();
         Type type = type();
         if(type == null) {
             throw new SyntaxException("Program must have a type");
@@ -74,8 +76,8 @@ public class IParserImplementation implements IParser {
 
         //After this it's a block, so we'll call block()
         Block block = block();
-
-        return null;
+        consume(IToken.Kind.RCURLY);
+        return new Program(firstToken,type,ident,paramList,block);
     }
 
     private Type type() throws PLCException {
@@ -85,6 +87,7 @@ public class IParserImplementation implements IParser {
         }
         //A type can either be : int, pixel, image, string, or void
         //If it is not one of these, then it is not a type
+        System.out.println("Type: " + tokenList.get(index).getKind());
         if(match_kind(IToken.Kind.RES_int, IToken.Kind.RES_pixel, IToken.Kind.RES_image, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
             return Type.getType(previous());
         }
@@ -226,8 +229,12 @@ public class IParserImplementation implements IParser {
         }
         //It's a name def B
         IToken firstToken = current();
+        if(firstToken.getKind() != IToken.Kind.LSQUARE) {
+            return null;
+        }
         consume(IToken.Kind.LSQUARE);
         Expr expr = expr();
+        System.out.println("expr: " + expr);
         if(expr == null) {
             throw new SyntaxException("Expected an expression in dimension");
         }
@@ -311,7 +318,8 @@ public class IParserImplementation implements IParser {
         }
         else if(current().getKind().equals(IToken.Kind.LSQUARE)) {
             Dimension dimension = dimension();
-            return new NameDef(token,type,dimension,new Ident(previous()));
+            Ident ident = new Ident(consume(IToken.Kind.IDENT));
+            return new NameDef(token,type,dimension,ident);
         }
         else {
             throw new SyntaxException("Expected an identifier");
@@ -427,14 +435,14 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr unary_expr() throws PLCException {
-        while(match_kind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.RES_sin, IToken.Kind.RES_cos, IToken.Kind.RES_atan)) {
+        if(match_kind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.RES_sin, IToken.Kind.RES_cos, IToken.Kind.RES_atan)) {
             IToken.Kind kind = previous().getKind();
             return new UnaryExpr(previous(), kind, unary_expr());
         }
-        return primary_expr();
+        return unary_expr_postfix();
     }
 
-    private UnaryExprPostfix unary_expr_postfix() throws PLCException {
+    private Expr unary_expr_postfix() throws PLCException {
         Expr expr = primary_expr();
         if(expr == null) {
             return null;
@@ -442,6 +450,9 @@ public class IParserImplementation implements IParser {
         //unary_expr_postfix is a primary_expr, and can have a pixelselector, or a colorchannel
         PixelSelector pixelSelector = pixel_selector();
         ColorChannel colorChannel = channel_selector();
+        if(pixelSelector == null && colorChannel == null) {
+            return expr;
+        }
         return new UnaryExprPostfix(previous(), expr, pixelSelector, colorChannel);
     }
 
@@ -479,16 +490,23 @@ public class IParserImplementation implements IParser {
             return expr;
         }
         else if (k == IToken.Kind.LSQUARE) {
-            Expr epxr = expanded_pixel_expr();
-            return epxr;
+            return expanded_pixel_expr();
+        }
+        else if (k == IToken.Kind.RES_x  || k == IToken.Kind.RES_y || k == IToken.Kind.RES_a || k == IToken.Kind.RES_r) {
+            IToken t = current();
+            consume(k);
+            return new PredeclaredVarExpr(t);
+        }
+        else if (k == IToken.Kind.RES_x_cart || k == IToken.Kind.RES_y_cart || k == IToken.Kind.RES_a_polar || k == IToken.Kind.RES_r_polar) {
+            return pixel_function_expr();
         }
         else if (match_kind(IToken.Kind.OR, IToken.Kind.BITOR, IToken.Kind.AND, IToken.Kind.BITAND, IToken.Kind.LE,
                 IToken.Kind.GE, IToken.Kind.GT, IToken.Kind.LT, IToken.Kind.EQ, IToken.Kind.EXP, IToken.Kind.PLUS,
                 IToken.Kind.MINUS, IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD, IToken.Kind.BANG, IToken.Kind.QUESTION) ) {
-            throw new SyntaxException("Unexpected token: " + current().getTokenString());
+            throw new SyntaxException("Unexpected token: " + current().getTokenString() + " at line: " + current().getSourceLocation().line() + " column: " + current().getSourceLocation().column());
         }
         else if (k == IToken.Kind.RPAREN|| k == IToken.Kind.RSQUARE || k == IToken.Kind.RCURLY) {
-            throw new SyntaxException("Unexpected token: " + current().getTokenString());
+            throw new SyntaxException("Unexpected token: " + current().getTokenString() + " at line: " + current().getSourceLocation().line() + " column: " + current().getSourceLocation().column());
         }
         else {
             consume(token.getKind());
@@ -497,7 +515,11 @@ public class IParserImplementation implements IParser {
     }
 
     private Expr pixel_function_expr() throws PLCException {
-        //todo
+        IToken.Kind k = current().getKind();
+        System.out.println("pixel function expr: " + k);
+        IToken t = current();
+        PixelSelector pixelSelector = pixel_selector();
+        return new PixelFuncExpr(t, k, pixelSelector);
     }
     private Expr expanded_pixel_expr() throws PLCException {
         //an expanded pixel expr is formatted as so: [expr,expr, expr]
@@ -531,7 +553,9 @@ public class IParserImplementation implements IParser {
                 return advance();
             }
         }
-        throw new SyntaxException("Unexpected token: " + current().getTokenString());
+        System.out.println("Previous: " + previous().getTokenString());
+        throw new SyntaxException("Unexpected token: " + current().getTokenString() + " at line: " +
+                current().getSourceLocation().line() + " column: " + current().getSourceLocation().column() + ". Expected : " + Arrays.toString(kind));
     }
 
     private IToken advance() {
