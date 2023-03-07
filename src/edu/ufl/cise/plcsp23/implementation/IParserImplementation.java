@@ -87,7 +87,6 @@ public class IParserImplementation implements IParser {
         }
         //A type can either be : int, pixel, image, string, or void
         //If it is not one of these, then it is not a type
-        System.out.println("Type: " + tokenList.get(index).getKind());
         if(match_kind(IToken.Kind.RES_int, IToken.Kind.RES_pixel, IToken.Kind.RES_image, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
             return Type.getType(previous());
         }
@@ -145,13 +144,19 @@ public class IParserImplementation implements IParser {
             return null;
         }
         ArrayList<Statement> stmtList = new ArrayList<Statement>();
+        int i = 0;
         while(true) {
             //try to get a new statement, if it's null then we're done, this could technically just be an empty list
+            i++;
             Statement stmt = statement();
+
             if(stmt == null) {
                 break;
             }
             //There is a period after each statement, similar to how there is a semicolon after each statement in many languages
+            if(current().getKind() == IToken.Kind.RCURLY) {
+                consume(IToken.Kind.RCURLY);
+            }
             consume(IToken.Kind.DOT);
             stmtList.add(stmt);
         }
@@ -191,6 +196,7 @@ public class IParserImplementation implements IParser {
         }
         else if(match_kind(IToken.Kind.RES_while)) {
             //If it's while then it's a while statement
+            System.out.println("While statement");
             Expr expr = expr();
             if(expr == null) {
                 throw new SyntaxException("While statement must have an expression");
@@ -199,6 +205,7 @@ public class IParserImplementation implements IParser {
             if(block == null) {
                 throw new SyntaxException("While statement must have a block");
             }
+            System.out.println("While exited");
             return new WhileStatement(expr.getFirstToken(), expr, block);
         }
         return null;
@@ -234,7 +241,6 @@ public class IParserImplementation implements IParser {
         }
         consume(IToken.Kind.LSQUARE);
         Expr expr = expr();
-        System.out.println("expr: " + expr);
         if(expr == null) {
             throw new SyntaxException("Expected an expression in dimension");
         }
@@ -448,11 +454,18 @@ public class IParserImplementation implements IParser {
             return null;
         }
         //unary_expr_postfix is a primary_expr, and can have a pixelselector, or a colorchannel
-        PixelSelector pixelSelector = pixel_selector();
-        ColorChannel colorChannel = channel_selector();
+        PixelSelector pixelSelector = null;
+        if(current().getKind() == IToken.Kind.LSQUARE) {
+            pixelSelector = pixel_selector();
+        }
+        ColorChannel colorChannel = null;
+        if(current().getKind() == IToken.Kind.COLON) {
+            colorChannel = channel_selector();
+        }
         if(pixelSelector == null && colorChannel == null) {
             return expr;
         }
+
         return new UnaryExprPostfix(previous(), expr, pixelSelector, colorChannel);
     }
 
@@ -468,7 +481,9 @@ public class IParserImplementation implements IParser {
             return new NumLitExpr(numLitToken);
         }
         else if(k == IToken.Kind.IDENT) {
+            System.out.println("IDENT"+token.getTokenString());
             consume(IToken.Kind.IDENT);
+
             return new IdentExpr(token);
         }
         else if (k == IToken.Kind.RES_rand) {
@@ -516,9 +531,13 @@ public class IParserImplementation implements IParser {
 
     private Expr pixel_function_expr() throws PLCException {
         IToken.Kind k = current().getKind();
-        System.out.println("pixel function expr: " + k);
         IToken t = current();
+        consume(k);
+
         PixelSelector pixelSelector = pixel_selector();
+        if(pixelSelector == null) {
+            throw new SyntaxException("Expected pixel selector after pixel function");
+        }
         return new PixelFuncExpr(t, k, pixelSelector);
     }
     private Expr expanded_pixel_expr() throws PLCException {
@@ -553,7 +572,6 @@ public class IParserImplementation implements IParser {
                 return advance();
             }
         }
-        System.out.println("Previous: " + previous().getTokenString());
         throw new SyntaxException("Unexpected token: " + current().getTokenString() + " at line: " +
                 current().getSourceLocation().line() + " column: " + current().getSourceLocation().column() + ". Expected : " + Arrays.toString(kind));
     }
