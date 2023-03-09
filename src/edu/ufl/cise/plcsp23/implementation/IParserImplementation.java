@@ -29,15 +29,33 @@ public class IParserImplementation implements IParser {
         }
         return ASTList.get(parseReturnIndex++);
     }
-
+    //Grammar:
+    //program = type ident LPAREN param_list RPAREN block
+    //block = LCURLY declaration_list statement_list RCURLY
+    //declaration_list = (declaration.)*
+    //declaration = name_def | name_def ASSIGN expr
+    //statement_list = (statement.)*
+    //statement = lvalue ASSIGN expr | write expr | while expr block
+    //name_def = type ident | type dimension ident
+    //type = image | pixel | int| string | void
+    //param_list = ε | name_def (COMMA name_def)*
     //expr = conditional_expr | or_expr
-    //conditional_expr = if expr ? expr ? expr
-    //or_expr = and_expr (|/|| and_expr)* -- At least one and_expr followed by zero or more |/|| and_expr
-    //and_expr comparison_expr (&/&& comparison_expr)* -- At least one comparison_expr followed by zero or more &/&& comparison_expr
-    //comparison_expr = power_expr (</>/==/<=/>= power_expr)* -- At least one power_expr followed by zero or more ==/!=/</>/<=/>= power_expr
-    //power_expr = additive_expr ** power_expr | additive_expr -- At least one additive_expr followed by ** and either another power_expr or an additive_expr
-    //additive_expr = multiplicative_expr (+/- multiplicative_expr)* -- At least one multiplicative_expr followed by zero or more +/- multiplicative_expr
-    //multiplicative_expr = unary_expr (*//% unary_expr)* -- At least one unary_expr followed by zero or more */% unary_expr
+    //conditional_expr = if expr QUESTION expr QUESTION expr
+    //or_expr = and_expr ((OR | BITOR) and_expr)*
+    //and_expr = comparison_expr ((AND | BITAND) comparison_expr)*
+    //comparison_expr = power_expr ((LT | GT | EQ | LE | GE) power_expr)*
+    //power_expr = additive_expr POW power_expr | additive_expr
+    //additive_expr = multiplicative_expr ((PLUS | MINUS) multiplicative_expr)*
+    //multiplicative_expr = unary_expr ((TIMES | DIV | MOD) unary_expr)*
+    //unary_expr = (BANG | MINUS | RES_sin | RES_cos | RES_atan) unary_expr | unary_expr_postfix
+    //unary_expr_postfix = primary_expr (pixel_selector | ε) (color_channel | ε)
+    //primary_expr = STRING_LIT | NUM_LIT | IDENT | LPAREN expr RPAREN | Z | RES_rand | x | y | a | r | expanded_pixel | pixel_function_expr
+    //color_channel = COLON (RES_red | RES_green | RES_blue)
+    //pixel_selector = LSQUARE expr COMMA expr RSQUARE
+    //expanded_pixel = LSQUARE expr COMMA expr COMMA expr RSQUARE
+    //pixel_function_expr = (RES_x_cart | RES_y_cart | RES_r_polar | RES_a_polar) pixel_selector
+    //dimension = LSQUARE expr COMMA expr RSQUARE
+    //lvalue = ident (pixel_selector | ε) (color_channel | ε)
 
     public IParserImplementation(String input) throws PLCException {
         if(input == null || input.isEmpty()) {
