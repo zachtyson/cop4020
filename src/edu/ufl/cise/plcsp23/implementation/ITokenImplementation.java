@@ -25,7 +25,7 @@ public class ITokenImplementation implements IToken  {
 
     public ITokenImplementation(String t, String k, int x, int y) {
         tokenString = t;
-        if (k == "OPERATOR") {
+        if (k.equals("OPERATOR")) {
             //call function for operator
             k = getTokenOperatorEnum(t);
         }
