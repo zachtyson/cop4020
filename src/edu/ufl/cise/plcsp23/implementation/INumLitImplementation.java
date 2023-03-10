@@ -13,21 +13,19 @@ public class INumLitImplementation extends ITokenImplementation implements INumL
     private Kind kind;
     private SourceLocation sourceLocation;
 
-    public INumLitImplementation(String t, String k, int x, int y) {
+    public INumLitImplementation(String t, Kind k, int x, int y) {
         tokenString = t;
-        kind = Kind.valueOf("NUM_LIT"); //It's always a NUM_LIT in this case
+        kind = Kind.NUM_LIT;
         sourceLocation = new SourceLocation(x, y);
-        //try to parse the string as an integer
-
     }
 
 
     @Override
-    public int getValue() {
+    public Integer getValue() {
         try {
             return Integer.parseInt(tokenString);
         } catch (NumberFormatException e) {
-            return -1;
+            return null;
             //This is just for debugging, since the exceptions should be thrown in the next() method
         }
     }
