@@ -492,7 +492,7 @@ public class IParserImplementation implements IParser {
             int x = token.getSourceLocation().line();
             int y = token.getSourceLocation().column();
             String n = token.getTokenString();
-            INumLitToken numLitToken = new INumLitImplementation(n, "NUM_LIT", x, y);
+            INumLitToken numLitToken = new INumLitImplementation(n, IToken.Kind.NUM_LIT, x, y);
             consume(IToken.Kind.NUM_LIT);
             return new NumLitExpr(numLitToken);
         }
@@ -509,7 +509,7 @@ public class IParserImplementation implements IParser {
             int x = token.getSourceLocation().line();
             int y = token.getSourceLocation().column();
             String n = token.getTokenString();
-            IStringLitToken stringLitToken = new IStringLitImplementation(n, "STRING_LIT", x, y);
+            IStringLitToken stringLitToken = new IStringLitImplementation(n, IToken.Kind.STRING_LIT, x, y);
             consume(IToken.Kind.STRING_LIT);
             return new StringLitExpr(stringLitToken);
         }
