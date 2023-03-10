@@ -1,16 +1,10 @@
 package edu.ufl.cise.plcsp23.implementation;
 
-import com.sun.tools.jconsole.JConsoleContext;
 import edu.ufl.cise.plcsp23.*;
 import edu.ufl.cise.plcsp23.ast.*;
-import edu.ufl.cise.plcsp23.ast.Dimension;
 
-import javax.swing.plaf.nimbus.State;
-import java.awt.*;
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class IParserImplementation implements IParser {
     private ArrayList<AST> ASTList = new ArrayList<AST>();
