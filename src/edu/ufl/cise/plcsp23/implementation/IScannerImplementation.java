@@ -1,5 +1,6 @@
 package edu.ufl.cise.plcsp23.implementation;
 
+import edu.ufl.cise.plcsp23.INumLitToken;
 import edu.ufl.cise.plcsp23.IScanner;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.LexicalException;
@@ -30,8 +31,19 @@ public class IScannerImplementation implements IScanner {
     @Override
     public IToken next() throws LexicalException {
         IToken t = tokens.get(next_value);
+        if(t.getKind() == EOF) {
+            return t;
+        }
         if(t.getKind() == ERROR) {
-            throw new LexicalException("E");
+            throw new LexicalException("Invalid token at line " + t.getSourceLocation().line() + " and column " + t.getSourceLocation().column() + ": " + t.getTokenString());
+        }
+        if(t.getKind() == NUM_LIT) {
+            INumLitToken n = (INumLitImplementation) t;
+            if(n.getValue() == null) {
+                throw new LexicalException("Invalid token at line " + t.getSourceLocation().line() + " and column " + t.getSourceLocation().column() + ": " + t.getTokenString());
+            }
+            next_value++;
+            return t;
         }
         next_value++;
         return t;
@@ -39,6 +51,8 @@ public class IScannerImplementation implements IScanner {
     }
 
     private String input;
+
+    private int k;
 
     private HashMap<String,IToken.Kind> reserved;
 
@@ -49,92 +63,107 @@ public class IScannerImplementation implements IScanner {
             start = position;
             scanToken();
         }
-        tokens.add(new ITokenImplementation("", "EOF", 0, 0));
+        tokens.add(new ITokenImplementation("", EOF, 0, 0));
+
     }
 
     private void scanToken() throws LexicalException {
+        k = column;
         char c = advance();
         switch (c) {
-            case '.' -> addToken(".", "DOT", line, column);
-            case ',' -> addToken(",", "COMMA", line, column);
-            case '?' -> addToken("?", "QUESTION", line, column);
-            case ':' -> addToken(":", "COLON", line, column);
-            case '(' -> addToken("(", "LPAREN", line, column);
-            case ')' -> addToken(")", "RPAREN", line, column);
-            case '[' -> addToken("[", "LSQUARE", line, column);
-            case ']' -> addToken("]", "RSQUARE", line, column);
-            case '{' -> addToken("{", "LCURLY", line, column);
-            case '}' -> addToken("}", "RCURLY", line, column);
+            case '.' -> addToken(".", DOT, line, k);
+            case ',' -> addToken(",", COMMA, line, k);
+            case '?' -> addToken("?", QUESTION, line, k);
+            case ':' -> addToken(":", COLON, line, k);
+            case '(' -> addToken("(", LPAREN, line, k);
+            case ')' -> addToken(")", RPAREN, line, k);
+            case '[' -> addToken("[", LSQUARE, line, k);
+            case ']' -> addToken("]", RSQUARE, line, k);
+            case '{' -> addToken("{", LCURLY, line, k);
+            case '}' -> addToken("}", RCURLY, line, k);
             case '=' -> {
                 if (match('=')) {
-                    addToken("==", "EQ", line, column);
+                    addToken("==", EQ, line, k);
                 } else {
-                    addToken("=", "ASSIGN", line, column);
+                    addToken("=", ASSIGN, line, k);
                 }
             }
             case '<' -> {
                 if (match('-')) {
                     if (match('>')) {
-                        addToken("<->", "EXCHANGE", line, column);
+                        addToken("<->", EXCHANGE, line, k);
                     } else {
-                        throw new LexicalException("Invalid token at line " + line + " and column " + column);
+                        addToken("<-", ERROR, line, k);
                     }
                 } else if (match('=')) {
-                    addToken("<=", "LE", line, column);
+                    addToken("<=", LE, line, k);
                 } else {
-                    addToken("<", "LT", line, column);
+                    addToken("<", LT, line, k);
                 }
             }
             case '>' -> {
                 if (match('=')) {
-                    addToken(">=", "GE", line, column);
+                    addToken(">=", GE, line, k);
                 } else {
-                    addToken(">", "GT", line, column);
+                    addToken(">", GT, line, k);
                 }
             }
-            case '!' -> addToken("!", "BANG", line, column);
+            case '!' -> addToken("!", BANG, line, k);
             case '&' -> {
                 if (match('&')) {
-                    addToken("&&", "AND", line, column);
+                    addToken("&&", AND, line, k);
                 } else {
-                    addToken("&", "BITAND", line, column);
+                    addToken("&", BITAND, line, k);
                 }
             }
             case '|' -> {
                 if (match('|')) {
-                    addToken("||", "OR", line, column);
+                    addToken("||", OR, line, k);
                 } else {
-                    addToken("|", "BITOR", line, column);
+                    addToken("|", BITOR, line, k);
                 }
             }
-            case '+' -> addToken("+", "PLUS", line, column);
-            case '-' -> addToken("-", "MINUS", line, column);
+            case '+' -> addToken("+", PLUS, line, k);
+            case '-' -> addToken("-", MINUS, line, k);
             case '*' -> {
                 if (match('*')) {
-                    addToken("**", "EXP", line, column);
+                    addToken("**", EXP, line, k);
                 } else {
-                    addToken("*", "TIMES", line, column);
+                    addToken("*", TIMES, line, k);
                 }
             }
-            case '/' -> addToken("/", "DIV", line, column);
-            case '%' -> addToken("%", "MOD", line, column);
-            case ' ', '\t', '\r' -> {
-
+            case '/' -> addToken("/", DIV, line, k);
+            case '%' -> addToken("%", MOD, line, k);
+            case ' ', '\t', '\r','\b','\f' -> {
             }
             case '\n' -> {
                 line++;
                 column = 1;
             }
             case '"' -> string_lit();
+            case '\\' -> {
+                if (match('n','t','r','b','f','\\' ,'"')) {
+                    //do nothing
+                }
+                else {
+                    addToken(c+ "", ERROR, line, k);
+                }
+            }
+            case '~' -> {
+                //this signifies a comment, so we continue until we reach the end of the line
+                while(peek() != '\n' && !isAtEnd()) {
+                    advance();
+                }
+            }
             default -> {
                 if(isDigit(c)) {
                     number(c);
                 }
-                if(isAlphabetic(c)) {
+                else if(isAlphabetic(c)) {
                     identifier();
                 }
                 else {
-                    addToken(c+ "", "ERROR", line, column);
+                    addToken(c+ "", ERROR, line, k);
                 }
             }
         }
@@ -146,41 +175,40 @@ public class IScannerImplementation implements IScanner {
                 line++;
                 column = 1;
             }
+            if(peek() == '\\') {
+                advance();
+            }
             advance();
         }
         if(isAtEnd()) {
-            throw new LexicalException("Unterminated string at line " + line + " and column " + column);
+            addToken(input.substring(start, position), ERROR, line, k);
+            return;
         }
         advance(); //last "
-        addToken(input.substring(start, position), "STRING_LIT", line, column);
+        addToken(input.substring(start, position), STRING_LIT, line, k);
     }
 
     private void identifier() throws LexicalException {
         start = position - 1;
-        while(isAlphabetic(peek()) || isDigit(peek())) {
+        while(isAlphabetic(peek()) || isDigit(peek()) || peek() == '_') {
             advance();
         }
         String text = input.substring(start, position);
         //check for reserved words
-        if(reserved.containsKey(text)) {
-            addToken(text, reserved.get(text).toString(), line, column);
-        }
-        else {
-            addToken(text, "IDENT", line, column);
-        }
+        addToken(text, reserved.getOrDefault(text, IDENT), line, k);
 
     }
 
     private void number(char c) throws LexicalException {
         start = position - 1;
         if(c == '0') { //a num_lit can't start with 0 unless it's 0
-            addToken("0", "NUM_LIT", line, column);
+            addToken("0", NUM_LIT, line, k);
             return;
         }
         while(isDigit(peek())) {
             advance();
         }
-        addToken(input.substring(start, position), "NUM_LIT", line, column);
+        addToken(input.substring(start, position), NUM_LIT, line, k);
     }
 
     private char peek() {
@@ -188,15 +216,6 @@ public class IScannerImplementation implements IScanner {
             return '\0'; //can't return null because char can't be null
         }
         return input.charAt(position);
-    }
-
-
-
-    private char peekNext() {
-        if(position + 1 >= input.length()) {
-            return '\0';
-        }
-        return input.charAt(position + 1);
     }
 
     private boolean isAtEnd() {
@@ -209,23 +228,28 @@ public class IScannerImplementation implements IScanner {
         return input.charAt(position - 1);
     }
 
-    private void addToken(String tokenString, String kind, int line, int column) throws LexicalException {
-        if(kind.equals("NUM_LIT")) {
-            System.out.println(tokenString);
+    private void addToken(String tokenString, IToken.Kind kind, int line, int column) throws LexicalException {
+        if(kind == NUM_LIT) {
             tokens.add(new INumLitImplementation(tokenString, kind, line, column));
+            return;
         }
-        if(kind.equals("STRING_LIT")) {
+        if (kind == STRING_LIT ) {
             tokens.add(new IStringLitImplementation(tokenString, kind, line, column));
+            return;
         }
         tokens.add(new ITokenImplementation(tokenString, kind, line, column));
     }
 
-    private boolean match(char expected) {
+    private boolean match(char... expected) {
         if (isAtEnd()) return false;
-        if (input.charAt(position) != expected) return false;
-        column++;
-        position++;
-        return true;
+        for (char c : expected) {
+            if (input.charAt(position) == c) {
+                position++;
+                column++;
+                return true;
+            }
+        }
+        return false;
     }
 
     void add_reserved() {
