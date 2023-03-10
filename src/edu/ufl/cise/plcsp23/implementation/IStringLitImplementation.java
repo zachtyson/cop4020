@@ -15,9 +15,9 @@ public class IStringLitImplementation extends ITokenImplementation implements IS
     private Kind kind;
     private SourceLocation sourceLocation;
 
-    public IStringLitImplementation(String t, String k, int x, int y) throws LexicalException {
+    public IStringLitImplementation(String t, Kind k, int x, int y) throws LexicalException {
         tokenString = t;
-        kind = Kind.valueOf("STRING_LIT"); //It's always a STRING_LIT in this case
+        kind = Kind.STRING_LIT; //It's always a STRING_LIT in this case
         sourceLocation = new SourceLocation(x, y);
 
         //remove first and last character

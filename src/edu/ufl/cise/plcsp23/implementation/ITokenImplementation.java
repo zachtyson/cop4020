@@ -23,13 +23,9 @@ public class ITokenImplementation implements IToken  {
         return tokenString;
     }
 
-    public ITokenImplementation(String t, String k, int x, int y) {
+    public ITokenImplementation(String t, Kind k, int x, int y) {
         tokenString = t;
-        if (k.equals("OPERATOR")) {
-            //call function for operator
-            k = getTokenOperatorEnum(t);
-        }
-        kind = Kind.valueOf(k);
+        kind = k;
         sourceLocation = new SourceLocation(x, y);
     }
 
