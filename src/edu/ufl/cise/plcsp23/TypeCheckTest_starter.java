@@ -1,11 +1,11 @@
 /*Copyright 2023 by Beverly A Sanders
- * 
- * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the 
- * University of Florida during the spring semester 2023 as part of the course project.  
- * 
- * No other use is authorized. 
- * 
- * This code may not be posted on a public web site either during or after the course.  
+ *
+ * This code is provided for solely for use of students in COP4020 Programming Language Concepts at the
+ * University of Florida during the spring semester 2023 as part of the course project.
+ *
+ * No other use is authorized.
+ *
+ * This code may not be posted on a public web site either during or after the course.
  */
 
 package edu.ufl.cise.plcsp23;
@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.ASTVisitor;
-import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
-import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
+//import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
+//import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
 
 class TypeCheckTest_starter {
-	
+
 
 	/* Scans, parses, and type checks input.  Returns normally if no errors. */
 	AST typeCheck(String input) throws LexicalException, PLCException {
@@ -29,7 +29,7 @@ class TypeCheckTest_starter {
 		ast.visit(typeChecker, null);
 		return ast;
 	}
-	
+
 	/* Scans, parses, and type checks input.  Expects input to scan and parse
 	 * without errors.  An error is expected during type checking.
 	 */
@@ -58,33 +58,33 @@ class TypeCheckTest_starter {
 		String input = """
 				void f(){}
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
-	
+
 	@Test
 	void t1() throws PLCException{
 		String input = """
 				int f(int xx, string ss, image ii, pixel p){}
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
-	
+
 	@Test
 	void t2() throws PLCException{
 		String input = """
 				string f(int f){}
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
-	
+
 	@Test
 	void t3() throws PLCException{
 		String input = """
 				string f(int f, string f){}
 				""";
-		typeCheckError(input);				
+		typeCheckError(input);
 	}
-	
+
 	@Test
 	void t4() throws PLCException{
 		String input = """
@@ -93,9 +93,9 @@ class TypeCheckTest_starter {
 				  string ss.
 				   }
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
-	
+
 	@Test
 	void t5() throws PLCException{
 		String input = """
@@ -104,9 +104,9 @@ class TypeCheckTest_starter {
 				  string ss.
 				   }
 				""";
-		typeCheckError(input);				
+		typeCheckError(input);
 	}
-	
+
 	@Test
 	void t6() throws PLCException{
 		String input = """
@@ -114,7 +114,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
-	
+
 	@Test
 	void t7() throws PLCException{
 		String input = """
@@ -128,7 +128,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
-	
+
 	@Test
 	void t8() throws PLCException{
 		String input = """
@@ -138,16 +138,16 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
-	
+
 	@Test void t9() throws PLCException{
 		String input = """
 				int f(){
 				:3.
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
-	
+
 	@Test void t10() throws PLCException{
 		String input = """
 				image f(){
@@ -156,9 +156,9 @@ class TypeCheckTest_starter {
 				int rr = j[3,4]:red.
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
-	
+
 	@Test void t11() throws PLCException{
 		String input = """
 				image f(){
@@ -166,9 +166,9 @@ class TypeCheckTest_starter {
 				i[x,y] = [x,y,0].
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
-	
+
 	@Test void t12() throws PLCException {
 		String input = """
 				void f(string url){
@@ -180,7 +180,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheck(input);
 	}
-	
+
 	@Test void t13() throws PLCException {
 		String input = """
 				string s(string s0, string s1, int ok){
@@ -189,7 +189,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheck(input);
 	}
-	
+
 	@Test void t14() throws PLCException {
 		String input = """
 				string s(string s0, string s1, int ok){
@@ -198,7 +198,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
-	
+
 	@Test void t15() throws PLCException {
 		String input = """
 				int f(int xx){
@@ -207,7 +207,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheck(input);
 	}
-	
+
 	@Test void t16() throws PLCException {
 		String input = """
 				int f(int xx){
@@ -221,7 +221,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheck(input);
 	}
-	
+
 	@Test void t17() throws PLCException {
 		String input = """
 				int f(int xx){
@@ -242,7 +242,7 @@ class TypeCheckTest_starter {
 				""";
 		typeCheck(input);
 	}
-	
+
 	@Test void t18() throws PLCException {
 		String input = """
 				int f(){
