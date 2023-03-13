@@ -184,6 +184,8 @@ public class IParserImplementation implements IParser {
         //A: LValue = Expr
         //B: write Expr
         //C: while Expr block
+        //D: : Expr
+        //D is a little weird,but it's just a return statement
         //so step one should be to check for each of these
         //ugh that means I have to implement LValue
         //It's pretty nice that like 90% of the code just sorta happens naturally, esp compared to the Scanner so I shouldn't complain
@@ -217,6 +219,14 @@ public class IParserImplementation implements IParser {
                 throw new SyntaxException("While statement must have a block");
             }
             return new WhileStatement(expr.getFirstToken(), expr, block);
+        }
+        else if (match_kind(IToken.Kind.COLON)) {
+            //If it's a colon then it's a return statement
+            Expr expr = expr();
+            if(expr == null) {
+                throw new SyntaxException("Return statement must have an expression");
+            }
+            return new ReturnStatement(expr.getFirstToken(), expr);
         }
         return null;
     }
