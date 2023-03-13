@@ -10,8 +10,10 @@
 
 package edu.ufl.cise.plcsp23;
 
+import edu.ufl.cise.plcsp23.implementation.ASTVisitorImplementation;
 import edu.ufl.cise.plcsp23.implementation.IParserImplementation;
 import edu.ufl.cise.plcsp23.implementation.IScannerImplementation;
+import edu.ufl.cise.plcsp23.ast.ASTVisitor;
 
 import static edu.ufl.cise.plcsp23.IToken.Kind.valueOf;
 
@@ -30,6 +32,11 @@ public class CompilerComponentFactory {
 	public static IParser makeParser(String input) throws PLCException {
 		//Add statement to return an instance of your parser
 		return new IParserImplementation(input);
+	}
+
+	public static ASTVisitor makeTypeChecker() {
+		//code to instantiate a return an ASTVisitor for type checking
+		return new ASTVisitorImplementation();
 	}
 }
 
