@@ -1,5 +1,6 @@
 package edu.ufl.cise.plcsp23.implementation;
 
+import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
@@ -7,6 +8,7 @@ import edu.ufl.cise.plcsp23.ast.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //Straight from notes:
 //A name can only be used once
@@ -85,6 +87,142 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
+        //BinaryExpr ::= Expr0 (+| - | * | / | % | < | > |
+        //<= | >= |== | | | || & | && | **) Expr1
+
+        //Exp0 and Expr1 must both be properly typed
+        //Allowed type combinations:
+        //Operator      Expr0.type  Expr1.type  BinaryExpr.type
+        //|, &          pixel       pixel       pixel
+        //||, &&        int         int         int
+        //<, >, <=, >=  int         int         int
+        //==            int         int         int
+        //==            pixel       pixel       int
+        //==            image       image       int
+        //==            string      string      int
+        //**            int         int         int
+        //**            pixel       int         pixel
+        //+             int         int         int
+        //+             pixel       pixel       pixel
+        //+             image       image       image
+        //+             string      string      string
+        //-             int         int         int
+        //-             pixel       pixel       pixel
+        //-             image       image       image
+        //*, / , %      int         int         int
+        //*, / , %      pixel       pixel       pixel
+        //*, / , %      image       image       image
+        //*, / , %      pixel       int         pixel
+        //*, / , %      image       int         image
+
+        //BinaryExpr.Type = Result type of the operation
+        //Anything not listed in the above table is an error
+        HashMap<String,NameDef> symbolTable = (HashMap<String,NameDef>) arg;
+        Expr expr0 = binaryExpr.getLeft();
+        visitExpr(expr0, symbolTable);
+        Type t1 = expr0.getType();
+        Expr expr1 = binaryExpr.getRight();
+        visitExpr(expr1, symbolTable);
+        Type t2 = expr1.getType();
+        IToken.Kind op = binaryExpr.getOp();
+        switch(op) {
+            case BITOR,BITAND -> {
+                if(t1 == Type.PIXEL && t2 == Type.PIXEL) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case OR,AND,GE,LE,GT,LT -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case EQ -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.PIXEL) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.IMAGE && t2 == Type.IMAGE) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.STRING && t2 == Type.STRING) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case EXP -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.INT) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case PLUS -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.PIXEL) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else if(t1 == Type.IMAGE && t2 == Type.IMAGE) {
+                    binaryExpr.setType(Type.IMAGE);
+                }
+                else if(t1 == Type.STRING && t2 == Type.STRING) {
+                    binaryExpr.setType(Type.STRING);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case MINUS -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.PIXEL) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else if(t1 == Type.IMAGE && t2 == Type.IMAGE) {
+                    binaryExpr.setType(Type.IMAGE);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+            case TIMES,DIV,MOD -> {
+                if(t1 == Type.INT && t2 == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.PIXEL) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else if(t1 == Type.IMAGE && t2 == Type.IMAGE) {
+                    binaryExpr.setType(Type.IMAGE);
+                }
+                else if(t1 == Type.PIXEL && t2 == Type.INT) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else if(t1 == Type.IMAGE && t2 == Type.INT) {
+                    binaryExpr.setType(Type.IMAGE);
+                }
+                else {
+                    printErrorBinaryExpr(binaryExpr, t1, t2);
+                }
+            }
+        }
+
         return null;
     }
 
@@ -125,6 +263,32 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+        //ConditionalExpr ::= Expr0 ? Expr1 ? Expr2
+        //Expr0, Expr1, Expr2 must be properly typed
+        //Expr0 must be of type int
+        //Expr1 and Expr2 must be of the same type, but not void
+        //ConditionalExpr must be of the same type as Expr1 and Expr2
+        //ConditionalExpr.Type = Expr1.Type = Expr2.Type
+        Map<String, Type> symbolTable = (Map<String, Type>) arg;
+        Expr expr0 = conditionalExpr.getGuard();
+        visitExpr(expr0, arg);
+        if(expr0.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr0.getLine()+ " column " + expr0.getColumn());
+        }
+
+
+        Expr expr1 = conditionalExpr.getTrueCase();
+        visitExpr(expr1, arg);
+
+        Expr expr2 = conditionalExpr.getFalseCase();
+        visitExpr(expr2, arg);
+
+        if(expr1.getType() != expr2.getType()) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr2.getLine()+ " column " + expr2.getColumn());
+        }
+        //Don't think I need to check for void here, since it should be checked in visitExpr
+        conditionalExpr.setType(expr1.getType());
+
         return null;
     }
 
@@ -242,6 +406,48 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     public Object visitExpr(Expr expr, Object arg) throws PLCException {
+        //Expr ::= ConditionalExpr | BinaryExpr |
+        //UnaryExpr | StringLitExpr | IdentExpr |
+        //NumLitExpr | ZExpr | RandExpr |
+        //UnaryExprPostFix | PixelFuncExpr
+        //|PredeclaredVarExp
+        if(expr instanceof ConditionalExpr) {
+            return visitConditionalExpr((ConditionalExpr) expr, arg);
+        }
+        else if(expr instanceof BinaryExpr) {
+            return visitBinaryExpr((BinaryExpr) expr, arg);
+        }
+        else if(expr instanceof UnaryExpr) {
+            return visitUnaryExpr((UnaryExpr) expr, arg);
+        }
+        else if(expr instanceof StringLitExpr) {
+            return visitStringLitExpr((StringLitExpr) expr, arg);
+        }
+        else if(expr instanceof IdentExpr) {
+            return visitIdentExpr((IdentExpr) expr, arg);
+        }
+        else if(expr instanceof NumLitExpr) {
+            return visitNumLitExpr((NumLitExpr) expr, arg);
+        }
+        else if(expr instanceof ZExpr) {
+            return visitZExpr((ZExpr) expr, arg);
+        }
+        else if(expr instanceof RandomExpr) {
+            return visitRandomExpr((RandomExpr) expr, arg);
+        }
+        else if(expr instanceof UnaryExprPostfix) {
+            return visitUnaryExprPostFix((UnaryExprPostfix) expr, arg);
+        }
+        else if(expr instanceof PixelFuncExpr) {
+            return visitPixelFuncExpr((PixelFuncExpr) expr, arg);
+        }
+        else if(expr instanceof PredeclaredVarExpr) {
+            return visitPredeclaredVarExpr((PredeclaredVarExpr) expr, arg);
+        }
         return null;
+    }
+
+    public void printErrorBinaryExpr(BinaryExpr binaryExpr,Type t1, Type t2) throws TypeCheckException {
+        throw new TypeCheckException("Type mismatch, error at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn());
     }
 }
