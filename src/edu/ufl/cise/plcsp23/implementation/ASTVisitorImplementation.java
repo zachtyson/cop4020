@@ -57,6 +57,44 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+        //UnaryExpr ::= (! | - | sin | cos | atan) Expr
+        //Expr must be properly typed
+        //Allowed type combinations:
+        //Operator      Type        UnaryExpr Type
+        //!             int         int
+        //!             pixel       pixel
+        //-             int         int
+        //cos           int         int
+        //sin           int         int
+        //atan          int         int
+        //Anything else is an error
+        //UnaryExpr Type is the same as result type
+        Expr expr = unaryExpr.getE();
+        visitExpr(expr, arg);
+        Type exprType = expr.getType();
+        IToken.Kind op = unaryExpr.getOp();
+        switch(op) {
+            case BANG -> {
+                if(exprType == Type.INT) {
+                    unaryExpr.setType(Type.INT);
+                } else if(exprType == Type.PIXEL) {
+                    unaryExpr.setType(Type.PIXEL);
+                } else {
+                    printUnaryError(unaryExpr, exprType);
+                }
+            }
+            case MINUS, RES_cos, RES_sin, RES_atan -> {
+                if(exprType == Type.INT) {
+                    unaryExpr.setType(Type.INT);
+                } else {
+                    printUnaryError(unaryExpr, exprType);
+                }
+            }
+            default -> {
+                throw new TypeCheckException("Invalid unary operator: " + op + " at line " + unaryExpr.getLine() + " and column " + unaryExpr.getColumn()+ ".");
+            }
+        }
+
         return null;
     }
 
@@ -220,6 +258,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 else {
                     printErrorBinaryExpr(binaryExpr, t1, t2);
                 }
+            }
+            default -> {
+                throw new TypeCheckException("Invalid binary expression at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn() + ".");
             }
         }
 
@@ -448,6 +489,10 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     public void printErrorBinaryExpr(BinaryExpr binaryExpr,Type t1, Type t2) throws TypeCheckException {
-        throw new TypeCheckException("Type mismatch, error at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn());
+        throw new TypeCheckException("Type mismatch, type 1: " + t1 + " type 2: " + t2 + " error at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn());
+    }
+
+    public void printUnaryError(UnaryExpr unaryExpr, Type t) throws TypeCheckException {
+        throw new TypeCheckException("Type mismatch, type: " + t + " error at line " + unaryExpr.getLine() + " column " + unaryExpr.getColumn());
     }
 }
