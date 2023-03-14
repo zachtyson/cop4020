@@ -1,6 +1,7 @@
 package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.PLCException;
+import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
 import java.util.ArrayList;
@@ -29,8 +30,61 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //From my understanding of the notes, arg is the symbol table
         //arg would contain global variables as well as the parameters
         //arg would be passed to the block, then declarations, then statements, etc
+        if(arg == null) {
+            arg = new HashMap<String, Type>();
+        }
         visitBlock(program.getBlock(), arg);
         //absolutely no idea what I am supposed to return
+        return null;
+    }
+
+    @Override
+    public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         return null;
     }
 
@@ -70,6 +124,11 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
+    public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         //Make sure that all declarations are properly typed
         //And then we just add each declaration to the symbol table?
@@ -80,9 +139,63 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Type = image | pixel | int | string | void
         //CANNOT be void however, void is reserved function return type
         //Dimension = [Expr, Expr]
-        NameDef nameDef = declaration.getNameDef();
-        Expr expr = declaration.getInitializer();
+        //NameDef is properly typed, and is not already in the symbol table
+        //Expr.type must be properly typed and compatible with NameDef.type, and can't reference the newly declared variable
+        //If nameDef.type = image, then either a) Expr != null b) Dimension != null c) both
+        HashMap<String,Type> symbolTable = (HashMap<String, Type>) arg;
+
         //If dimension is not null, then Type = image and Expr = image
         //Make sure that nameDef.Ident.getName() is not already in the symbol table
+        return null;
+    }
+
+    @Override
+    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitIdent(Ident ident, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+        return null;
+    }
+
+    @Override
+    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
+        return null;
     }
 }
