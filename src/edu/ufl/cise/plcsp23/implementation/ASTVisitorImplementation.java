@@ -33,9 +33,32 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //arg would contain global variables as well as the parameters
         //arg would be passed to the block, then declarations, then statements, etc
         if(arg == null) {
-            arg = new HashMap<String, Type>();
+            arg = new HashMap<String, NameDef>();
         }
-        visitBlock(program.getBlock(), arg);
+        HashMap<String, NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        Type t = program.getType();
+        String id = program.getIdent().getName();
+        List<NameDef> paramList = program.getParamList();
+        for(NameDef param : paramList) {
+            String paramName = param.getIdent().getName();
+            Type paramType = param.getType();
+            if(paramType == Type.VOID) {
+                throw new TypeCheckException("Parameter " + paramName + " has no type");
+            }
+            if(symbolTable.containsKey(paramName)) {
+                throw new TypeCheckException("Parameter " + paramName + " is already defined");
+            } else {
+                symbolTable.put(paramName, param);
+            }
+        }
+        Type returnType = (Type) visitBlock(program.getBlock(), arg);
+        if(returnType != t && t != Type.VOID && returnType != null) {
+            throw new TypeCheckException("Return type does not match function type");
+        }
+        if(t == Type.VOID && returnType != null) {
+            throw new TypeCheckException("Return type does not match function type");
+        }
+
         //absolutely no idea what I am supposed to return
         return null;
     }
@@ -49,7 +72,13 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
-        return null;
+        //ReturnStatement ::= Expr
+        //Expr must be properly typed
+        //ReturnStatement Type is the same as Expr Type
+        Expr expr = returnStatement.getE();
+        visitExpr(expr, arg);
+        Type t = expr.getType();
+        return t;
     }
 
     @Override
@@ -158,11 +187,23 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+        //WhileStatement ::= Expr Block
+        //Expr must be properly typed
+        //Expr.type = int
+        //Must use scope
+        //Block must be properly typed
+
         return null;
     }
 
     @Override
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        //WriteExpr ::= Expr
+        //Expr must be properly typed
+        Expr expr = statementWrite.getE();
+        visitExpr(expr, arg);
+        Type exprType = expr.getType();
+
         return null;
     }
 
@@ -175,6 +216,66 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
+        LValue lValue = statementAssign.getLv();
+        Type t = (Type) visitLValue(lValue, arg);
+        if(t == null) {
+            throw new TypeCheckException("LValue type is null, at line " + statementAssign.getLine() + " and column " + statementAssign.getColumn() + ".");
+        }
+        Expr expr = statementAssign.getE();
+        visitExpr(expr, arg);
+
+        Type exprType = expr.getType();
+        if(exprType == null) {
+            throw new TypeCheckException("Expr type is null, at line " + statementAssign.getLine() + " and column " + statementAssign.getColumn() + ".");
+        }
+        if(t == Type.IMAGE) {
+            if(exprType == Type.IMAGE || exprType == Type.STRING || exprType == Type.PIXEL) {
+                return null;
+            }
+            else {
+                printAssignmentError(statementAssign, t, exprType);
+            }
+        }
+        else if(t == Type.PIXEL) {
+            if(exprType == Type.PIXEL || exprType == Type.INT) {
+                return null;
+            }
+            else {
+                printAssignmentError(statementAssign, t, exprType);
+            }
+        }
+        else if(t == Type.INT) {
+            if(exprType == Type.INT || exprType == Type.PIXEL) {
+                return null;
+            }
+            else {
+                printAssignmentError(statementAssign, t, exprType);
+            }
+        }
+        else if(t == Type.STRING) {
+            if(exprType == Type.VOID) {
+                printAssignmentError(statementAssign, t, exprType);
+            }
+            else {
+                return null;
+            }
+        }
+        else {
+            throw new TypeCheckException("Invalid LValue type: " + t + " at line " + statementAssign.getLine() + " and column " + statementAssign.getColumn() + ".");
+        }
+        //LValue.type   Expr.type
+        //image         image
+        //              pixel
+        //              string
+        //pixel         pixel
+        //              int
+        //int           int
+        //              pixel
+        //string        string
+        //              int
+        //              pixel
+        //              image
+
         return null;
     }
 
@@ -351,7 +452,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 visitWhileStatement((WhileStatement) statement, arg);
             }
             else if(statement instanceof ReturnStatement) {
-                visitReturnStatement((ReturnStatement) statement, arg);
+                return visitReturnStatement((ReturnStatement) statement, arg);
             }
         }
         return null;
@@ -403,13 +504,45 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
         HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
         NameDef nameDef = declaration.getNameDef();
-        visitNameDef(nameDef, symbolTable);
         Expr expr = declaration.getInitializer();
+
         if(expr != null) {
             visitExpr(expr, symbolTable);
             //Expr type must be compatible with NameDef.Type
-            if(expr.getType() != nameDef.getType()) {
-                throw new TypeCheckException("Type mismatch, error at line " + nameDef.getLine()+ " column " + nameDef.getColumn());
+            //LValue.type   Expr.type
+            //image         image
+            //              pixel
+            //              string
+            //pixel         pixel
+            //              int
+            //int           int
+            //              pixel
+            //string        string
+            //              int
+            //              pixel
+            //              image
+            //Iterate over all elements of expr to make sure it doesn't use the newly declared variable
+            Type left = nameDef.getType();
+            Type right = expr.getType();
+            if(left == Type.IMAGE) {
+                if(right != Type.IMAGE && right != Type.PIXEL && right != Type.STRING) {
+                    throw new TypeCheckException("Type mismatch, error at line " + expr.getLine()+ " column " + expr.getColumn());
+                }
+            }
+            else if(left == Type.PIXEL) {
+                if(right != Type.PIXEL && right != Type.INT) {
+                    throw new TypeCheckException("Type mismatch, error at line " + expr.getLine()+ " column " + expr.getColumn());
+                }
+            }
+            else if(left == Type.INT) {
+                if(right != Type.INT && right != Type.PIXEL) {
+                    throw new TypeCheckException("Type mismatch, error at line " + expr.getLine()+ " column " + expr.getColumn());
+                }
+            }
+            else if(left == Type.STRING) {
+                if(right != Type.STRING && right != Type.INT && right != Type.PIXEL && right != Type.IMAGE) {
+                    throw new TypeCheckException("Type mismatch, error at line " + expr.getLine()+ " column " + expr.getColumn());
+                }
             }
         } else {
             if(nameDef.getType() == Type.IMAGE) {
@@ -418,6 +551,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 }
             }
         }
+        visitNameDef(nameDef, symbolTable);
 
         //If dimension is not null, then Type = image and Expr = image
         //Make sure that nameDef.Ident.getName() is not already in the symbol table
@@ -426,11 +560,50 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+        if(dimension == null) {
+            return null;
+        }
+        //Dimension ::= Expr0 Expr1
+        //Expr0 and Expr1 must be properly typed
+        //Expr0 and Expr1 must be of type int
+        Expr expr0 = dimension.getWidth();
+        visitExpr(expr0, arg);
+        if(expr0.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr0.getLine()+ " column " + expr0.getColumn());
+        }
+        Expr expr1 = dimension.getHeight();
+        visitExpr(expr1, arg);
+        if(expr1.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr1.getLine()+ " column " + expr1.getColumn());
+        }
         return null;
     }
 
     @Override
     public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
+        //ExpandedPixel ::= [ Expr0 , Expr1 , Expr2 ]
+        //Expr0, Expr1, Expr2 must be properly typed
+        //Expr0, Expr1, Expr2 must be of type int
+        //ExpandedPixel.Type = pixel
+        Expr expr0 = expandedPixelExpr.getRedExpr();
+        visitExpr(expr0, arg);
+        if(expr0.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr0.getLine()+ " column " + expr0.getColumn());
+        }
+        Expr expr1 = expandedPixelExpr.getGrnExpr();
+        visitExpr(expr1, arg);
+        if(expr1.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr1.getLine()+ " column " + expr1.getColumn());
+        }
+        Expr expr2 = expandedPixelExpr.getBluExpr();
+        visitExpr(expr2, arg);
+        if(expr2.getType() != Type.INT) {
+            throw new TypeCheckException("Type mismatch, error at line " + expr2.getLine()+ " column " + expr2.getColumn());
+        }
+        expandedPixelExpr.setType(Type.PIXEL);
+
+
+
         return null;
     }
 
@@ -454,7 +627,8 @@ public class ASTVisitorImplementation implements ASTVisitor {
         HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
         String ident = identExpr.getName();
         if(symbolTable.containsKey(ident)) {
-            identExpr.setType(symbolTable.get(ident).getType());
+            NameDef d = symbolTable.get(ident);
+            identExpr.setType(d.getType());
         } else {
             throw new TypeCheckException("Identifier not found, error at line " + identExpr.getLine()+ " column " + identExpr.getColumn());
         }
@@ -540,6 +714,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //PixelSelector ::= Expr0 Expr1
         //Expr0 and Expr1 must be properly typed
         //Expr0.type = Expr1.type = int
+        if(pixelSelector == null) {
+            return null;
+        }
         Expr expr0 = pixelSelector.getX();
         visitExpr(expr0, arg);
         if(expr0.getType() != Type.INT) {
@@ -601,6 +778,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
         else if(expr instanceof PredeclaredVarExpr) {
             return visitPredeclaredVarExpr((PredeclaredVarExpr) expr, arg);
         }
+        else if(expr instanceof ExpandedPixelExpr) {
+            return visitExpandedPixelExpr((ExpandedPixelExpr) expr, arg);
+        }
         return null;
     }
 
@@ -614,5 +794,10 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     public void printUnaryPostfixError(UnaryExprPostfix unaryExprPostfix, Type t) throws TypeCheckException {
         throw new TypeCheckException("Type mismatch, type: " + t + " error at line " + unaryExprPostfix.getLine() + " column " + unaryExprPostfix.getColumn());
+    }
+
+
+    private void printAssignmentError(AssignmentStatement statementAssign, Type t, Type exprType) throws TypeCheckException {
+        throw new TypeCheckException("Type mismatch, type: " + t + " exprType: " + exprType + " error at line " + statementAssign.getLine() + " column " + statementAssign.getColumn());
     }
 }
