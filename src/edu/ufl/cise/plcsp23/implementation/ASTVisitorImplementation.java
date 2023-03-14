@@ -5,7 +5,6 @@ import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         HashMap<String, NameDef> symbolTable = (HashMap<String, NameDef>) arg;
         Type t = program.getType();
         String id = program.getIdent().getName();
+        //id will be used in the future probably
         List<NameDef> paramList = program.getParamList();
         for(NameDef param : paramList) {
             String paramName = param.getIdent().getName();
@@ -77,8 +77,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //ReturnStatement Type is the same as Expr Type
         Expr expr = returnStatement.getE();
         visitExpr(expr, arg);
-        Type t = expr.getType();
-        return t;
+        return expr.getType();
     }
 
     @Override
@@ -123,9 +122,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
                     printUnaryError(unaryExpr, exprType);
                 }
             }
-            default -> {
-                throw new TypeCheckException("Invalid unary operator: " + op + " at line " + unaryExpr.getLine() + " and column " + unaryExpr.getColumn()+ ".");
-            }
+            default -> throw new TypeCheckException("Invalid unary operator: " + op + " at line " + unaryExpr.getLine() + " and column " + unaryExpr.getColumn()+ ".");
         }
 
         return null;
@@ -441,9 +438,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
                     printErrorBinaryExpr(binaryExpr, t1, t2);
                 }
             }
-            default -> {
-                throw new TypeCheckException("Invalid binary expression at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn() + ".");
-            }
+            default -> throw new TypeCheckException("Invalid binary expression at line " + binaryExpr.getLine() + " column " + binaryExpr.getColumn() + ".");
         }
 
         return null;
