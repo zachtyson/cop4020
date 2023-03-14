@@ -133,16 +133,31 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Make sure that all declarations are properly typed
         //And then we just add each declaration to the symbol table?
         //The scope of each identifier should last until the end of the program, excluding nested identifiers created in while loops
-        //Declaration = NameDef
-        //Declaration = NameDef = Expr
-        //NameDef = Type Ident | Type Dimension Ident
-        //Type = image | pixel | int | string | void
-        //CANNOT be void however, void is reserved function return type
-        //Dimension = [Expr, Expr]
-        //NameDef is properly typed, and is not already in the symbol table
-        //Expr.type must be properly typed and compatible with NameDef.type, and can't reference the newly declared variable
-        //If nameDef.type = image, then either a) Expr != null b) Dimension != null c) both
-        HashMap<String,Type> symbolTable = (HashMap<String, Type>) arg;
+        //Declaration::= NameDef (Expr | ε )
+        //NameDef ::= Type IDENT | Type Dimension IDENT
+        //Type ::= image | pixel | int | string (void is not allowed here)
+        //NameDef must be properly typed (explored in visitNameDef)
+        //Expr must be properly typed if it exists (todo: explore this in visitExpr)
+        //if Expr exists, it must be compatible with NameDef.Type
+        //if NameDef.Type == Image then either Expr != null or NameDef.Dimension != null, or both
+
+        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        NameDef nameDef = declaration.getNameDef();
+        visitNameDef(nameDef, symbolTable);
+        Expr expr = declaration.getInitializer();
+        if(expr != null) {
+            visitExpr(expr, symbolTable);
+            //Expr type must be compatible with NameDef.Type
+            if(expr.getType() != nameDef.getType()) {
+                throw new TypeCheckException("Type mismatch, error at line " + nameDef.getLine()+ " column " + nameDef.getColumn());
+            }
+        } else {
+            if(nameDef.getType() == Type.IMAGE) {
+                if(nameDef.getDimension() == null) {
+                    throw new TypeCheckException("Image must have a dimension, error at line " + nameDef.getLine()+ " column " + nameDef.getColumn());
+                }
+            }
+        }
 
         //If dimension is not null, then Type = image and Expr = image
         //Make sure that nameDef.Ident.getName() is not already in the symbol table
@@ -176,6 +191,33 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        //NameDef ::= Type IDENT | Type Dimension IDENT
+        //Type ::= image | pixel | int | string | void
+        //Dimension ::= [Expr, Expr]
+        //If dimension is not null, then Type MUST be image
+        //If dimension is not null, then dimension must be a proper type
+        //Ident name must not already be in the symbol table
+        //Type cannot be void unless it's a function return type, which wouldn't appear here
+        //If these pass, then we can add the name to the symbol table
+        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        Type type = nameDef.getType();
+        Ident ident = nameDef.getIdent();
+        Dimension dimension = nameDef.getDimension();
+        if(dimension != null) {
+            if(type != Type.IMAGE) {
+                throw new TypeCheckException("Non null dimension must have type image, error at line " + ident.getLine() + ", column " + ident.getColumn());
+            }
+            visitDimension(dimension, arg);
+            //todo: while loop type check here
+        }
+        if(type == Type.VOID) {
+            throw new TypeCheckException("Type cannot be void, error at line " + ident.getLine() + ", column " + ident.getColumn());
+        }
+        if(symbolTable.containsKey(ident.getName())) {
+            throw new TypeCheckException("Identifier " + ident.getName() + " already exists in the symbol table, error at line " + ident.getLine() + ", column " + ident.getColumn());
+        }
+        symbolTable.put(ident.getName(), nameDef);
+
         return null;
     }
 
@@ -196,6 +238,10 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
+        return null;
+    }
+
+    public Object visitExpr(Expr expr, Object arg) throws PLCException {
         return null;
     }
 }
