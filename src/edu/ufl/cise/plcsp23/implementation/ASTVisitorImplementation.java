@@ -689,10 +689,8 @@ public class ASTVisitorImplementation implements ASTVisitor {
         }
         if(symbolTable.containsKey(ident.getName())) {
             //Honestly I don't know what to do here, since test 17 makes it so that the same identifier name can be used in different scopes
-            //so I guess I have three possible conclusions:
-            //A: The only variables visible in a scope are the ones that are declared in that scope, excluding the ones that are used in the guard of a while loop
-            //B: You can just plain out use the same identifier name in different scopes
-            //C: You can just plain out use the same identifier name ALWAYS, as long as they're different types
+            //If I had any say in this I would forbid shadowing, but I don't so I guess I'll just have to deal with it
+            //
             throw new TypeCheckException("Identifier " + ident.getName() + " already exists in the symbol table, error at line " + ident.getLine() + ", column " + ident.getColumn());
         }
         symbolTable.put(ident.getName(), nameDef);
