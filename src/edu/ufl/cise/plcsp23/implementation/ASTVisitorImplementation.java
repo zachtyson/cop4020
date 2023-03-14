@@ -524,7 +524,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //NameDef ::= Type IDENT | Type Dimension IDENT
         //Type ::= image | pixel | int | string (void is not allowed here)
         //NameDef must be properly typed (explored in visitNameDef)
-        //Expr must be properly typed if it exists (todo: explore this in visitExpr)
+        //Expr must be properly typed if it exists
         //if Expr exists, it must be compatible with NameDef.Type
         //if NameDef.Type == Image then either Expr != null or NameDef.Dimension != null, or both
 
@@ -696,7 +696,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 throw new TypeCheckException("Non null dimension must have type image, error at line " + ident.getLine() + ", column " + ident.getColumn());
             }
             visitDimension(dimension, arg);
-            //todo: while loop type check here
+
         }
         if(type == Type.VOID) {
             throw new TypeCheckException("Type cannot be void, error at line " + ident.getLine() + ", column " + ident.getColumn());
@@ -704,6 +704,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         if(symbolTable.containsKey(ident.getName())) {
             //Honestly I don't know what to do here, since test 17 makes it so that the same identifier name can be used in different scopes
             //If I had any say in this I would forbid shadowing, but I don't so I guess I'll just have to deal with it
+            //todo: dear god please fix this
             if (symbolTable.containsKey("1")) {
                 //If this is an nested scope, then we can just allow it
                 symbolTable.replace(ident.getName(), nameDef);
@@ -721,7 +722,6 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Well in this case I guess that we just gotta make sure that the type is int
         numLitExpr.setType(Type.INT);
         //Literally no idea what else to do here
-        //todo: come back here lol
         int value = numLitExpr.getValue();
 
 
