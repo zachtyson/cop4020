@@ -52,6 +52,8 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+        stringLitExpr.setType(Type.STRING);
+        //That's uh, it?
         return null;
     }
 
@@ -381,11 +383,23 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
+
         return null;
     }
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+        //IdentExpr is used when it's being used as an expression
+        //Like a = b + 2
+        //b would be an IdentExpr
+        //IdentExpr.name has been defined and is in the current scope
+        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        String ident = identExpr.getName();
+        if(symbolTable.containsKey(ident)) {
+            identExpr.setType(symbolTable.get(ident).getType());
+        } else {
+            throw new TypeCheckException("Identifier not found, error at line " + identExpr.getLine()+ " column " + identExpr.getColumn());
+        }
         return null;
     }
 
@@ -428,6 +442,13 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+        //Well in this case I guess that we just gotta make sure that the type is int
+        numLitExpr.setType(Type.INT);
+        //Literally no idea what else to do here
+        //todo: come back here lol
+        int value = numLitExpr.getValue();
+
+
         return null;
     }
 
