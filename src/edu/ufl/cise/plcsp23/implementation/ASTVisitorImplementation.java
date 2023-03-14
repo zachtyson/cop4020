@@ -202,6 +202,20 @@ public class ASTVisitorImplementation implements ASTVisitor {
         HashMap<String, NameDef> scope = new HashMap<>();
         //Iterate over the current scope and add all the declarations to the new scope
         scope.putAll(((HashMap<String, NameDef>) arg));
+        //todo:
+        //well for now I think what I'm going to do is add something into the scope that says that this is nested
+        //since identifiers can't start with numbers, I'll just add an entry that is a number
+        //and then I'll just check if the scope contains that number
+
+        if(scope.containsKey("1")) {
+            INumLitImplementation numLit2 = new INumLitImplementation(null,null,scope.get("1").getFirstToken().getSourceLocation().line(),0);
+            NameDef nameDef2 = new NameDef(numLit2,null,null,null);
+            scope.replace("1", nameDef2);
+        } else {
+            INumLitImplementation numLit = new INumLitImplementation(null,null,1,0);
+            NameDef nameDef = new NameDef(numLit,null,null,null);
+            scope.put("1", nameDef);
+        }
         visitBlock(block, scope);
 
 
@@ -690,7 +704,11 @@ public class ASTVisitorImplementation implements ASTVisitor {
         if(symbolTable.containsKey(ident.getName())) {
             //Honestly I don't know what to do here, since test 17 makes it so that the same identifier name can be used in different scopes
             //If I had any say in this I would forbid shadowing, but I don't so I guess I'll just have to deal with it
-            //
+            if (symbolTable.containsKey("1")) {
+                //If this is an nested scope, then we can just allow it
+                symbolTable.replace(ident.getName(), nameDef);
+                return null;
+            }
             throw new TypeCheckException("Identifier " + ident.getName() + " already exists in the symbol table, error at line " + ident.getLine() + ", column " + ident.getColumn());
         }
         symbolTable.put(ident.getName(), nameDef);
