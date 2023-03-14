@@ -507,6 +507,15 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        //PixelFunctionExpr ::= ( x_cart | y_cart | a_polar | r_polar ) PixelSelector
+        //PixelSelector ::= [ Expr , Expr ]
+        //PixelSelector must be properly typed
+        //PixelFunctionExpr.type = int
+
+        IToken.Kind k = pixelFuncExpr.getFunction();
+        PixelSelector pixelSelector = pixelFuncExpr.getSelector();
+        visitPixelSelector(pixelSelector, arg);
+        pixelFuncExpr.setType(Type.INT);
         return null;
     }
 
@@ -517,6 +526,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
+        //PredeclaredVarExpr ::= x | y | a | r
+        //PredeclaredVarExpr.type = int
+        predeclaredVarExpr.setType(Type.INT);
         return null;
     }
 
