@@ -192,6 +192,18 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Expr.type = int
         //Must use scope
         //Block must be properly typed
+        Expr expr = whileStatement.getGuard();
+        visitExpr(expr, arg);
+        Type exprType = expr.getType();
+        if(exprType != Type.INT) {
+            throw new TypeCheckException("While statement guard must be of type int, at line " + whileStatement.getLine() + " and column " + whileStatement.getColumn() + ".");
+        }
+        Block block = whileStatement.getBlock();
+        HashMap<String, NameDef> scope = new HashMap<>();
+        //Iterate over the current scope and add all the declarations to the new scope
+        scope.putAll(((HashMap<String, NameDef>) arg));
+        visitBlock(block, scope);
+
 
         return null;
     }
@@ -676,6 +688,11 @@ public class ASTVisitorImplementation implements ASTVisitor {
             throw new TypeCheckException("Type cannot be void, error at line " + ident.getLine() + ", column " + ident.getColumn());
         }
         if(symbolTable.containsKey(ident.getName())) {
+            //Honestly I don't know what to do here, since test 17 makes it so that the same identifier name can be used in different scopes
+            //so I guess I have three possible conclusions:
+            //A: The only variables visible in a scope are the ones that are declared in that scope, excluding the ones that are used in the guard of a while loop
+            //B: You can just plain out use the same identifier name in different scopes
+            //C: You can just plain out use the same identifier name ALWAYS, as long as they're different types
             throw new TypeCheckException("Identifier " + ident.getName() + " already exists in the symbol table, error at line " + ident.getLine() + ", column " + ident.getColumn());
         }
         symbolTable.put(ident.getName(), nameDef);
