@@ -159,7 +159,7 @@ public class IScannerImplementation implements IScanner {
                 if(isDigit(c)) {
                     number(c);
                 }
-                else if(isAlphabetic(c)) {
+                else if(isAlphabetic(c) || c == '_') {
                     identifier();
                 }
                 else {
