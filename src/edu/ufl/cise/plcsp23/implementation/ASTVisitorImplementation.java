@@ -436,8 +436,13 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
-
-        return null;
+        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        String identName = ident.getName();
+        if(symbolTable.containsKey(identName)) {
+            return null;
+        } else {
+            throw new TypeCheckException("Identifier not found, error at line " + ident.getLine()+ " column " + ident.getColumn());
+        }
     }
 
     @Override
@@ -458,7 +463,18 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        return null;
+        //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
+        //Ident must be in the current scope
+        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        Ident ident = lValue.getIdent();
+        visitIdent(ident, arg);
+        PixelSelector pixelSelector = lValue.getPixelSelector();
+        if(pixelSelector != null) {
+            visitPixelSelector(pixelSelector, arg);
+        }
+        ColorChannel channelSelector = lValue.getColor();
+
+        return symbolTable.get(ident.getName()).getType();
     }
 
     @Override
@@ -521,6 +537,20 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+        //PixelSelector ::= Expr0 Expr1
+        //Expr0 and Expr1 must be properly typed
+        //Expr0.type = Expr1.type = int
+        Expr expr0 = pixelSelector.getX();
+        visitExpr(expr0, arg);
+        if(expr0.getType() != Type.INT) {
+            throw new TypeCheckException("PixelSelector must have type int, error at line " + pixelSelector.getLine() + ", column " + pixelSelector.getColumn());
+        }
+        Expr expr1 = pixelSelector.getY();
+        visitExpr(expr1, arg);
+        if(expr1.getType() != Type.INT) {
+            throw new TypeCheckException("PixelSelector must have type int, error at line " + pixelSelector.getLine() + ", column " + pixelSelector.getColumn());
+        }
+
         return null;
     }
 
