@@ -42,6 +42,8 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
+        randomExpr.setType(Type.INT);
+        //That's uh, it?
         return null;
     }
 
@@ -102,6 +104,55 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+        //UnaryExprPostfix::=PrimaryExpr (PixelSelector | ε ) (ChannelSelector | ε )
+        //Just gotta make sure that everything is properly typed
+        //PrimaryExpr ::=STRING_LIT | NUM_LIT | IDENT | ( Expr ) | Z | rand | x | y | a | r | ExpandedPixel | PixelFunctionExp
+        Expr expr = unaryExprPostfix.getPrimary();
+        visitExpr(expr, arg);
+        Type exprType = expr.getType();
+
+        PixelSelector pixelSelector = unaryExprPostfix.getPixel();
+        visitPixelSelector(pixelSelector, arg);
+        ColorChannel channel = unaryExprPostfix.getColor();
+
+        if(pixelSelector == null) {
+            if(channel == null) {
+                throw new TypeCheckException("At least one of PixelSelector or ChannelSelector should be present in order to create a UnaryExprPostfix object, at line " + unaryExprPostfix.getLine() + " and column " + unaryExprPostfix.getColumn() + ".");
+            }
+            if(exprType == Type.IMAGE) {
+                unaryExprPostfix.setType(Type.IMAGE);
+            } else if(exprType == Type.PIXEL) {
+                unaryExprPostfix.setType(Type.INT);
+            } else {
+                printUnaryPostfixError(unaryExprPostfix, exprType);
+            }
+        }
+        else {
+            //PixelSelector is not null
+            if(channel == null) {
+                if(exprType == Type.IMAGE) {
+                    unaryExprPostfix.setType(Type.PIXEL);
+                }
+                else {
+                    printUnaryPostfixError(unaryExprPostfix, exprType);
+                }
+            }
+            else {
+                if(exprType == Type.IMAGE) {
+                    unaryExprPostfix.setType(Type.INT);
+                }
+                else {
+                    printUnaryPostfixError(unaryExprPostfix, exprType);
+                }
+            }
+        }
+
+        //PrimaryExpr.type  PixelSelector   ChannelSelector UnaryExprPostfix.type
+        //Pixel             No              Yes             Int ****
+        //Image             No              Yes             image
+        //Image             Yes             No              pixel
+        //Image             Yes             Yes             int *****
+
         return null;
     }
 
@@ -117,6 +168,8 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+        //ZExpr.type = int
+        zExpr.setType(Type.INT);
         return null;
     }
 
@@ -515,5 +568,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     public void printUnaryError(UnaryExpr unaryExpr, Type t) throws TypeCheckException {
         throw new TypeCheckException("Type mismatch, type: " + t + " error at line " + unaryExpr.getLine() + " column " + unaryExpr.getColumn());
+    }
+
+    public void printUnaryPostfixError(UnaryExprPostfix unaryExprPostfix, Type t) throws TypeCheckException {
+        throw new TypeCheckException("Type mismatch, type: " + t + " error at line " + unaryExprPostfix.getLine() + " column " + unaryExprPostfix.getColumn());
     }
 }
