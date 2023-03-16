@@ -31,27 +31,21 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //From my understanding of the notes, arg is the symbol table
         //arg would contain global variables as well as the parameters
         //arg would be passed to the block, then declarations, then statements, etc
-        if(arg == null) {
-            arg = new HashMap<String, NameDef>();
-        }
-        HashMap<String, NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+
         Type t = program.getType();
-        String id = program.getIdent().getName();
         //id will be used in the future probably
-        List<NameDef> paramList = program.getParamList();
-        for(NameDef param : paramList) {
-            String paramName = param.getIdent().getName();
-            Type paramType = param.getType();
-            if(paramType == Type.VOID) {
-                throw new TypeCheckException("Parameter " + paramName + " has no type");
-            }
-            if(symbolTable.containsKey(paramName)) {
-                throw new TypeCheckException("Parameter " + paramName + " is already defined");
-            } else {
-                symbolTable.put(paramName, param);
-            }
+        String id = program.getIdent().getName();
+
+        SymbolTable table;
+        if(arg != null) {
+            table = (SymbolTable) arg;
+            table.put(program.getParamList());
         }
-        Type returnType = (Type) visitBlock(program.getBlock(), arg);
+        else {
+            table = new SymbolTable(program.getParamList());
+        }
+
+        Type returnType = (Type) visitBlock(program.getBlock(), table);
         if(returnType != t && t != Type.VOID && returnType != null) {
             throw new TypeCheckException("Return type does not match function type");
         }
@@ -196,23 +190,12 @@ public class ASTVisitorImplementation implements ASTVisitor {
             throw new TypeCheckException("While statement guard must be of type int, at line " + whileStatement.getLine() + " and column " + whileStatement.getColumn() + ".");
         }
         Block block = whileStatement.getBlock();
-        HashMap<String, NameDef> scope = new HashMap<>();
-        //Iterate over the current scope and add all the declarations to the new scope
-        scope.putAll(((HashMap<String, NameDef>) arg));
         //todo:
         //well for now I think what I'm going to do is add something into the scope that says that this is nested
         //since identifiers can't start with numbers, I'll just add an entry that is a number
         //and then I'll just check if the scope contains that number
 
-        if(scope.containsKey("1")) {
-            INumLitImplementation numLit2 = new INumLitImplementation(null,null,scope.get("1").getFirstToken().getSourceLocation().line(),0);
-            NameDef nameDef2 = new NameDef(numLit2,null,null,null);
-            scope.replace("1", nameDef2);
-        } else {
-            INumLitImplementation numLit = new INumLitImplementation(null,null,1,0);
-            NameDef nameDef = new NameDef(numLit,null,null,null);
-            scope.put("1", nameDef);
-        }
+        SymbolTable scope = new SymbolTable((SymbolTable) arg);
         visitBlock(block, scope);
 
 
@@ -334,7 +317,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
         //BinaryExpr.Type = Result type of the operation
         //Anything not listed in the above table is an error
-        HashMap<String,NameDef> symbolTable = (HashMap<String,NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         Expr expr0 = binaryExpr.getLeft();
         visitExpr(expr0, symbolTable);
         Type t1 = expr0.getType();
@@ -487,7 +470,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Expr1 and Expr2 must be of the same type, but not void
         //ConditionalExpr must be of the same type as Expr1 and Expr2
         //ConditionalExpr.Type = Expr1.Type = Expr2.Type
-        Map<String, Type> symbolTable = (Map<String, Type>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         Expr expr0 = conditionalExpr.getGuard();
         visitExpr(expr0, arg);
         if(expr0.getType() != Type.INT) {
@@ -523,7 +506,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //if Expr exists, it must be compatible with NameDef.Type
         //if NameDef.Type == Image then either Expr != null or NameDef.Dimension != null, or both
 
-        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         NameDef nameDef = declaration.getNameDef();
         Expr expr = declaration.getInitializer();
 
@@ -630,9 +613,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
-        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         String identName = ident.getName();
-        if(symbolTable.containsKey(identName)) {
+        if(symbolTable.get(identName) != null) {
             return null;
         } else {
             throw new TypeCheckException("Identifier not found, error at line " + ident.getLine()+ " column " + ident.getColumn());
@@ -645,10 +628,10 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Like a = b + 2
         //b would be an IdentExpr
         //IdentExpr.name has been defined and is in the current scope
-        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         String ident = identExpr.getName();
-        if(symbolTable.containsKey(ident)) {
-            NameDef d = symbolTable.get(ident);
+        NameDef d = symbolTable.get(ident);
+        if(d != null) {
             identExpr.setType(d.getType());
         } else {
             throw new TypeCheckException("Identifier not found, error at line " + identExpr.getLine()+ " column " + identExpr.getColumn());
@@ -660,7 +643,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
         //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
         //Ident must be in the current scope
-        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         Ident ident = lValue.getIdent();
         visitIdent(ident, arg);
         PixelSelector pixelSelector = lValue.getPixelSelector();
@@ -682,7 +665,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
         //Ident name must not already be in the symbol table
         //Type cannot be void unless it's a function return type, which wouldn't appear here
         //If these pass, then we can add the name to the symbol table
-        HashMap<String,NameDef> symbolTable = (HashMap<String, NameDef>) arg;
+        SymbolTable symbolTable = (SymbolTable) arg;
         Type type = nameDef.getType();
         Ident ident = nameDef.getIdent();
         Dimension dimension = nameDef.getDimension();
@@ -695,17 +678,6 @@ public class ASTVisitorImplementation implements ASTVisitor {
         }
         if(type == Type.VOID) {
             throw new TypeCheckException("Type cannot be void, error at line " + ident.getLine() + ", column " + ident.getColumn());
-        }
-        if(symbolTable.containsKey(ident.getName())) {
-            //Honestly I don't know what to do here, since test 17 makes it so that the same identifier name can be used in different scopes
-            //If I had any say in this I would forbid shadowing, but I don't so I guess I'll just have to deal with it
-            //todo: dear god please fix this
-            if (symbolTable.containsKey("1")) {
-                //If this is an nested scope, then we can just allow it
-                symbolTable.replace(ident.getName(), nameDef);
-                return null;
-            }
-            throw new TypeCheckException("Identifier " + ident.getName() + " already exists in the symbol table, error at line " + ident.getLine() + ", column " + ident.getColumn());
         }
         symbolTable.put(ident.getName(), nameDef);
 
