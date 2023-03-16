@@ -5,9 +5,7 @@ import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 //Straight from notes:
 //A name can only be used once
@@ -58,7 +56,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
-    public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
+    public Object visitRandomExpr(RandomExpr randomExpr, Object arg) {
         randomExpr.setType(Type.INT);
         //That's uh, it?
         return null;
@@ -75,7 +73,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
-    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) {
         stringLitExpr.setType(Type.STRING);
         //That's uh, it?
         return null;
@@ -214,7 +212,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
-    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+    public Object visitZExpr(ZExpr zExpr, Object arg) {
         //ZExpr.type = int
         zExpr.setType(Type.INT);
         return null;
@@ -685,7 +683,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
-    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) {
         //Well in this case I guess that we just gotta make sure that the type is int
         numLitExpr.setType(Type.INT);
         //Literally no idea what else to do here
@@ -732,7 +730,7 @@ public class ASTVisitorImplementation implements ASTVisitor {
     }
 
     @Override
-    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
+    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) {
         //PredeclaredVarExpr ::= x | y | a | r
         //PredeclaredVarExpr.type = int
         predeclaredVarExpr.setType(Type.INT);
