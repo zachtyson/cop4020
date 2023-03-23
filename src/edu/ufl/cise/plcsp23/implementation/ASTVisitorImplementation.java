@@ -644,12 +644,69 @@ public class ASTVisitorImplementation implements ASTVisitor {
         SymbolTable symbolTable = (SymbolTable) arg;
         Ident ident = lValue.getIdent();
         visitIdent(ident, arg);
+        //Ident.type    PixelSelector   ChannelSelector     LValue.type
+        //image         ε               ε                  image
+        //image         yes             ε                  pixel
+        //image         ε               yes                image
+        //image         yes             yes                int
+        //pixel         ε               ε                  pixel
+        // pixel        ε               yes                int
+        //string        ε               ε                  string
+        //int           ε               ε                  int
+        //everything else is an error
         PixelSelector pixelSelector = lValue.getPixelSelector();
         if(pixelSelector != null) {
             visitPixelSelector(pixelSelector, arg);
         }
         ColorChannel channelSelector = lValue.getColor();
-
+        if(channelSelector != null) {
+            NameDef nameDef = symbolTable.get(ident.getName());
+            if(nameDef.getType() != Type.IMAGE || nameDef.getType() != Type.PIXEL) {
+                throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+            }
+            if(nameDef.getType() == Type.IMAGE) {
+                if(pixelSelector == null) {
+                    return Type.IMAGE;
+                } else {
+                    return Type.INT;
+                }
+            }
+            if(nameDef.getType() == Type.PIXEL) {
+                if(pixelSelector != null) {
+                    throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+                }
+                return Type.INT;
+            }
+        } else {
+            NameDef nameDef = symbolTable.get(ident.getName());
+            Type t = nameDef.getType();
+            if(t == Type.IMAGE) {
+                if(pixelSelector != null) {
+                    return Type.PIXEL;
+                } else {
+                    return Type.IMAGE;
+                }
+            }
+            if(t == Type.PIXEL) {
+                if(pixelSelector != null) {
+                    throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+                }
+                return Type.PIXEL;
+            }
+            if(t == Type.STRING) {
+                if(pixelSelector != null) {
+                    throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+                }
+                return Type.STRING;
+            }
+            if(t == Type.INT) {
+                if(pixelSelector != null) {
+                    throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+                }
+                return Type.INT;
+            }
+            throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
+        }
         return symbolTable.get(ident.getName()).getType();
     }
 
