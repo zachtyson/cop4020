@@ -188,16 +188,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
             throw new TypeCheckException("While statement guard must be of type int, at line " + whileStatement.getLine() + " and column " + whileStatement.getColumn() + ".");
         }
         Block block = whileStatement.getBlock();
-        //todo:
-        //well for now I think what I'm going to do is add something into the scope that says that this is nested
-        //since identifiers can't start with numbers, I'll just add an entry that is a number
-        //and then I'll just check if the scope contains that number
 
         SymbolTable scope = new SymbolTable((SymbolTable) arg);
-        visitBlock(block, scope);
-
-
-        return null;
+        return visitBlock(block, scope);
     }
 
     @Override
@@ -451,7 +444,10 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 visitWriteStatement((WriteStatement) statement, arg);
             }
             else if(statement instanceof WhileStatement) {
-                visitWhileStatement((WhileStatement) statement, arg);
+                Type t = (Type) visitWhileStatement((WhileStatement) statement, arg);
+                if(t != null) {
+                    return t;
+                }
             }
             else if(statement instanceof ReturnStatement) {
                 return visitReturnStatement((ReturnStatement) statement, arg);
