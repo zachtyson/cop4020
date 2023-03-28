@@ -928,7 +928,7 @@ class TypeCheckTest_starter {
 					:s.
 				}
 				""";
-		typeCheck(input);
+		typeCheckError(input);
 	}
 
 	@Test
