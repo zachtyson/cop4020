@@ -263,6 +263,7 @@ class TypeCheckTest_starter {
 		typeCheckError(input);
 	}
 
+
 	@Test
 	void andSimpleProgram() throws PLCException {
 		String input = """
@@ -959,6 +960,257 @@ class TypeCheckTest_starter {
 				}
 				""";
 		typeCheck(input);
+	}
+	@Test
+	void identReferred() throws PLCException{
+		String input = """
+				void f(){
+				  int xx = xx.
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void nestedIdentReferred() throws PLCException{
+		String input = """
+				void f(){
+				  int xx = yy + (yy + (zz + xx)).
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void unaryPostFixReferred() throws PLCException{
+		String input = """
+				void f(){
+				  int rr = xx[aa[1,2]:blu,rr[24,3]]:red.
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void pixelFuncReferred() throws PLCException{
+		String input = """
+				void f(){
+				  int xx = a_polar[2,x_cart[3,r_polar[3,xx]]].
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void imageWorks() throws PLCException{
+		String input = """
+				void f(){
+				  image[100,100] ii = "url".
+				  image ii1 = ii.
+				  image[100,200] john.
+				  }
+				""";
+		typeCheck(input);
+	}
+
+	@Test
+	void imageFails() throws PLCException{
+		String input = """
+				void f(){
+				  image ii.
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void voidNameDef() throws PLCException{
+		String input = """
+				void f(){
+				  void hot.
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void notImageWithDimensionNameDef() throws PLCException{
+		String input = """
+				void f(){
+				  int[100,200] hot.
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test void conditionalExpr0BadType() throws PLCException {
+		String input = """
+				string s(string s0, string s1, string ok){
+				:if ok ? s0 ? s0 + s1 .
+				}
+				""";
+		typeCheckError(input);
+	}
+
+	@Test void conditionalExpr1_2BadTypes() throws PLCException {
+		String input = """
+				string s(string s0, int s1, string ok){
+				:if ok ? s0 ? s0 + s1 .
+				}
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void returnTypeCompatability() throws PLCException{
+		String input = """
+				int f(){
+					string lol = "hello".
+					:lol .
+				  }
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void testFunctionWithUninitializedVariable() throws PLCException {
+		String input = """
+            void uninitializedVariableFunction(){
+                int uninitializedVar.
+            }
+            """;
+		typeCheck(input);
+	}
+
+	@Test
+	void testFunctionWithIncorrectReturnType() throws PLCException {
+		String input = """
+            int incorrectReturnTypeFunction(){
+                : "wrong_return_type".
+            }
+            """;
+		typeCheckError(input);
+	}
+
+	@Test
+	void testFunctionWithCorrectReturnType() throws PLCException {
+		String input = """
+            int correctReturnTypeFunction(){
+                : 42.
+            }
+            """;
+		typeCheck(input);
+	}
+
+	@Test
+	void testFunctionWithInvalidExpression() throws PLCException {
+		String input = """
+            void invalidExpressionFunction(){
+                int result = 2 + "invalid_operand".
+            }
+            """;
+		typeCheckError(input);
+	}
+
+	@Test
+	void testFunctionWithValidWhileLoop() throws PLCException {
+		String input = """
+            void validWhileLoopFunction(){
+                int counter = 5.
+                while counter > 0 {
+                    counter = counter - 1.
+                }.
+            }
+            """;
+		typeCheck(input);
+	}
+
+	@Test
+	void testFunctionWithInvalidWhileLoopCondition() throws PLCException {
+		String input = """
+            void invalidWhileLoopConditionFunction(){
+                int counter = 5.
+                while "invalid_condition" {
+                    counter = counter - 1.
+                }.
+            }
+            """;
+		typeCheckError(input);
+	}
+
+	@Test
+	void andNestedWhileStmt() throws PLCException {
+		String input = """
+            void f(int i){
+                while i {
+                    int j = 0.
+                    while j {
+                        j = j + 1.
+                    }.
+                    i = i - 1.
+                }.
+            }
+            """;
+		typeCheck(input);
+	}
+
+	@Test
+	void andComplexExpressions() throws PLCException {
+		String input = """
+            void f(int i, int j){
+                int result = (i * j) + (i / j) - (i % j).
+            }
+            """;
+		typeCheck(input);
+	}
+
+	@Test
+	void repeatedconditional() throws PLCException {
+		String input = """
+				string s(string s0, string s1, string ok){
+				string ok = if ok ? s0 ? s0 + s1 .
+				}
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void delcarationrepeatedconditional() throws PLCException {
+		String input = """
+				string s(string s0, string s1, string ok){
+				string ok = if ok ? s0 ? s0 + s1 .
+				}
+				""";
+		typeCheckError(input);
+	}
+
+	@Test
+	void declarationrepeatedunaryexpr() throws PLCException {
+		String input = """
+				void f(int this, int i, pixel p){
+					this = i == this.
+				}
+				""";
+		typeCheck(input);
+	}
+	@Test
+	void declarationrepeatedunaryexpr2() throws PLCException {
+		String input = """
+				void f(int this, int i, pixel p){
+					this = this == i.
+				}
+				""";
+		typeCheck(input);
+	}
+
+	@Test
+	void unaryPostFixdecrepeat() throws PLCException{
+		String input = """
+				void f(){
+				  int rr = rr[aa[1,2]:blu,rr[24,3]]:red.
+				  }
+				""";
+		typeCheckError(input);
 	}
 
 }
