@@ -25,7 +25,7 @@ public class CodeGenerator implements ASTVisitor {
         StringBuilder code = new StringBuilder();
         //Program ::= Type Ident NameDef* Block
         String type = program.getType().toString();
-        String ident = program.getIdent().toString();
+        String ident = program.getIdent().getName();
         List<NameDef> paramList = program.getParamList();
         Block block = program.getBlock();
         ArrayList<String> paramNames = new ArrayList<>();
@@ -100,6 +100,97 @@ public class CodeGenerator implements ASTVisitor {
             code.append(" = ").append((String) visitExpr(expr, arg));
         }
         code.append(";").append("\n");
+        return code.toString();
+    }
+
+    @Override
+    public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws PLCException {
+        StringBuilder code = new StringBuilder();
+        //AssignmentStatement ::= LValue = Expr
+        LValue lValue = assignmentStatement.getLv();
+        Expr expr = assignmentStatement.getE();
+        code.append((String) visitLValue(lValue, arg));
+        code.append(" = ");
+        code.append((String) visitExpr(expr, arg));
+        code.append(";").append("\n");
+        return code.toString();
+    }
+
+    @Override
+    public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws PLCException {
+        StringBuilder code = new StringBuilder();
+        //WriteStatement ::= write Expr
+        Expr expr = writeStatement.getE();
+        code.append("System.out.println(");
+        code.append((String) visitExpr(expr, arg));
+        code.append(");").append("\n");
+        return code.toString();
+    }
+
+    @Override
+    public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+        StringBuilder code = new StringBuilder();
+        //WhileStatement ::= while Expr Block
+        Expr expr = whileStatement.getGuard();
+        Block block = whileStatement.getBlock();
+        code.append("while(");
+        code.append((String) visitExpr(expr, arg));
+        code.append(") {").append("\n");
+        code.append((String) visitBlock(block, arg));
+        code.append("}").append("\n");
+        return code.toString();
+    }
+
+    @Override
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+        StringBuilder code = new StringBuilder();
+        //ReturnStatement ::= : Expr
+        Expr expr = returnStatement.getE();
+        code.append("return ");
+        code.append((String) visitExpr(expr, arg));
+        code.append(";").append("\n");
+        return code.toString();
+    }
+
+    public Object visitIdent(Ident ident, Object arg) throws PLCException {
+        //Ident ::= String
+        return ident.getName();
+    }
+
+    @Override
+    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+        //Dimension ::= Expr0 Expr1
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
+        //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
+        //For assignment 5, only handle the case where there is no PixelSelector and no ChannelSelector.
+        //This means that the LValue is just an Ident.
+        Ident ident = lValue.getIdent();
+        return visitIdent(ident, arg);
+
+    }
+
+    @Override
+    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+        //PixelSelector ::= [ Expr0 Expr1 ]
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        //NameDef ::= Type Ident (Dimension | ε )
+        //(Do not implement dimensions in assignment 5)
+        //So currently just assume that there is no dimension
+        StringBuilder code = new StringBuilder();
+        Type type = nameDef.getType();
+        String name = nameDef.getIdent().getName();
+        String typeString = type.toString();
+        code.append(typeString).append(" ").append(name);
         return code.toString();
     }
 
