@@ -103,6 +103,52 @@ public class CodeGenerator implements ASTVisitor {
         return code.toString();
     }
 
+
+    public Object visitExpr(Expr expr, Object arg) throws PLCException {
+        //Expr ::= ConditionalExpr | BinaryExpr |
+        //UnaryExpr | StringLitExpr | IdentExpr |
+        //NumLitExpr | ZExpr | RandExpr |
+        //UnaryExprPostFix | PixelFuncExpr
+        //|PredeclaredVarExp
+        if(expr instanceof ConditionalExpr) {
+            return visitConditionalExpr((ConditionalExpr) expr, arg);
+        }
+        else if(expr instanceof BinaryExpr) {
+            return visitBinaryExpr((BinaryExpr) expr, arg);
+        }
+        else if(expr instanceof UnaryExpr) {
+            return visitUnaryExpr((UnaryExpr) expr, arg);
+        }
+        else if(expr instanceof StringLitExpr) {
+            return visitStringLitExpr((StringLitExpr) expr, arg);
+        }
+        else if(expr instanceof IdentExpr) {
+            return visitIdentExpr((IdentExpr) expr, arg);
+        }
+        else if(expr instanceof NumLitExpr) {
+            return visitNumLitExpr((NumLitExpr) expr, arg);
+        }
+        else if(expr instanceof ZExpr) {
+            return visitZExpr((ZExpr) expr, arg);
+        }
+        else if(expr instanceof RandomExpr) {
+            return visitRandomExpr((RandomExpr) expr, arg);
+        }
+        else if(expr instanceof UnaryExprPostfix) {
+            return visitUnaryExprPostFix((UnaryExprPostfix) expr, arg);
+        }
+        else if(expr instanceof PixelFuncExpr) {
+            return visitPixelFuncExpr((PixelFuncExpr) expr, arg);
+        }
+        else if(expr instanceof PredeclaredVarExpr) {
+            return visitPredeclaredVarExpr((PredeclaredVarExpr) expr, arg);
+        }
+        else if(expr instanceof ExpandedPixelExpr) {
+            return visitExpandedPixelExpr((ExpandedPixelExpr) expr, arg);
+        }
+        return null;
+    }
+
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
         StringBuilder code = new StringBuilder();
         //ConditionalExpr ::= Expr0 Expr1 Expr2
@@ -200,61 +246,6 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
         //ExpandedPixelExpr ::= Expr0 Expr1 Expr2
         //Not implemented in Assignment 5
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-
-
-    public Object visitExpr(Expr expr, Object arg) throws PLCException {
-        //Expr ::= ConditionalExpr | BinaryExpr |
-        //UnaryExpr | StringLitExpr | IdentExpr |
-        //NumLitExpr | ZExpr | RandExpr |
-        //UnaryExprPostFix | PixelFuncExpr
-        //|PredeclaredVarExp
-        if(expr instanceof ConditionalExpr) {
-            return visitConditionalExpr((ConditionalExpr) expr, arg);
-        }
-        else if(expr instanceof BinaryExpr) {
-            return visitBinaryExpr((BinaryExpr) expr, arg);
-        }
-        else if(expr instanceof UnaryExpr) {
-            return visitUnaryExpr((UnaryExpr) expr, arg);
-        }
-        else if(expr instanceof StringLitExpr) {
-            return visitStringLitExpr((StringLitExpr) expr, arg);
-        }
-        else if(expr instanceof IdentExpr) {
-            return visitIdentExpr((IdentExpr) expr, arg);
-        }
-        else if(expr instanceof NumLitExpr) {
-            return visitNumLitExpr((NumLitExpr) expr, arg);
-        }
-        else if(expr instanceof ZExpr) {
-            return visitZExpr((ZExpr) expr, arg);
-        }
-        else if(expr instanceof RandomExpr) {
-            return visitRandomExpr((RandomExpr) expr, arg);
-        }
-        else if(expr instanceof UnaryExprPostfix) {
-            return visitUnaryExprPostFix((UnaryExprPostfix) expr, arg);
-        }
-        else if(expr instanceof PixelFuncExpr) {
-            return visitPixelFuncExpr((PixelFuncExpr) expr, arg);
-        }
-        else if(expr instanceof PredeclaredVarExpr) {
-            return visitPredeclaredVarExpr((PredeclaredVarExpr) expr, arg);
-        }
-        else if(expr instanceof ExpandedPixelExpr) {
-            return visitExpandedPixelExpr((ExpandedPixelExpr) expr, arg);
-        }
         return null;
     }
 
