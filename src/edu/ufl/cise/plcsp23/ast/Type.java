@@ -20,7 +20,7 @@ public enum Type {
 		};
 	}
 
-	public static String toString(Type type) {
+	public static String convertToString(Type type) {
 		return switch(type) {
 		case IMAGE -> "image";
 		case PIXEL -> "pixel";
