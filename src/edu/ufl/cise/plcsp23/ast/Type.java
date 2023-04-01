@@ -19,4 +19,14 @@ public enum Type {
 		default -> throw new RuntimeException("error in Type.getType, unexpected token kind " + token.getKind());
 		};
 	}
+
+	public static String toString(Type type) {
+		return switch(type) {
+		case IMAGE -> "image";
+		case PIXEL -> "pixel";
+		case INT -> "int";
+		case STRING -> "String";
+		case VOID -> "void";
+		};
+	}
 }
