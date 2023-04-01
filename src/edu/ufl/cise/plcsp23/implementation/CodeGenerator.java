@@ -127,11 +127,91 @@ public class CodeGenerator implements ASTVisitor {
         IToken.Kind op = binaryExpr.getOp();
         Expr expr1 = binaryExpr.getRight();
         code.append((String) visitExpr(expr0, arg));
+        //todo: convert op to java code correctly
         code.append(" ").append(op.toString()).append(" ");
         code.append((String) visitExpr(expr1, arg));
         return code.toString();
 
     }
+
+    @Override
+    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+        //UnaryExpr ::= (! | - | sin | cos | atan) Expr
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+        //Generate the Java string literal corresponding
+        //to this one. (You may ignore escape
+        //sequences)
+        return stringLitExpr.getValue();
+    }
+
+    @Override
+    public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+        //Generate name
+        return identExpr.getName();
+    }
+
+    @Override
+    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+        //This isn't even mentioned in the assignment, but I'm assuming it's just a number
+        return String.valueOf(numLitExpr.getValue());
+    }
+
+    @Override
+    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+        //Constant with value 255
+        return String.valueOf(255);
+    }
+
+    @Override
+    public Object visitRandomExpr(RandomExpr randExpr, Object arg) throws PLCException {
+        //Generate code for a random int in [0,256)
+        //using Math.floor(Math.random() * 256)
+        int x = (int) Math.floor(Math.random()*256);
+        return String.valueOf(x);
+    }
+
+    @Override
+    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostFix, Object arg) throws PLCException {
+        //UnaryExprPostfix::= PrimaryExpr (PixelSelector | ε ) (ChannelSelector | ε )
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        //PixelFunctionExpr ::= ( x_cart | y_cart | a_polar | r_polar ) PixelSelector
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExp, Object arg) throws PLCException {
+        //PredeclaredVarExpr ::= x | y | a | r
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+    @Override
+    public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
+        //ExpandedPixelExpr ::= Expr0 Expr1 Expr2
+        //Not implemented in Assignment 5
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
 
     public Object visitExpr(Expr expr, Object arg) throws PLCException {
         //Expr ::= ConditionalExpr | BinaryExpr |
