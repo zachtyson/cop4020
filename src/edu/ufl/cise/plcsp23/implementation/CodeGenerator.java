@@ -24,17 +24,18 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitProgram(Program program, Object arg) throws PLCException {
         StringBuilder code = new StringBuilder();
         //Program ::= Type Ident NameDef* Block
-        String type = program.getType().toString();
+        Type t = program.getType();
+        String type = Type.convertToString(t);
         String ident = program.getIdent().getName();
         List<NameDef> paramList = program.getParamList();
         Block block = program.getBlock();
         ArrayList<String> paramNames = new ArrayList<>();
         for(NameDef param : paramList) {
-            paramNames.add(param.getIdent().toString());
+            paramNames.add(param.getIdent().getName());
         }
         ArrayList<String> paramTypes = new ArrayList<>();
         for(NameDef param : paramList) {
-            paramTypes.add(param.getType().toString());
+            paramTypes.add(Type.convertToString(param.getType()));
         }
         code.append("public class ").append(ident).append(" {\n");
         code.append("public static ").append(type).append(" apply(");
@@ -93,8 +94,8 @@ public class CodeGenerator implements ASTVisitor {
         //Declaration::= NameDef (Expr | ε )
         NameDef nameDef = declaration.getNameDef();
         Expr expr = declaration.getInitializer();
-        String type = nameDef.getType().toString();
-        String ident = nameDef.getIdent().toString();
+        String type = Type.convertToString(nameDef.getType());
+        String ident = nameDef.getIdent().getName();
         code.append(type).append(" ").append(ident);
         if(expr != null) {
             code.append(" = ").append((String) visitExpr(expr, arg));
@@ -189,7 +190,7 @@ public class CodeGenerator implements ASTVisitor {
         StringBuilder code = new StringBuilder();
         Type type = nameDef.getType();
         String name = nameDef.getIdent().getName();
-        String typeString = type.toString();
+        String typeString = Type.convertToString(type);
         code.append(typeString).append(" ").append(name);
         return code.toString();
     }
@@ -265,10 +266,28 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr1 = binaryExpr.getRight();
         code.append((String) visitExpr(expr0, arg));
         //todo: convert op to java code correctly
-        code.append(" ").append(op.toString()).append(" ");
+        code.append(" ").append(convertOpToString(op)).append(" ");
         code.append((String) visitExpr(expr1, arg));
         return code.toString();
 
+    }
+
+    private String convertOpToString(IToken.Kind k) {
+        switch(k) {
+            case PLUS -> { return "+"; }
+            case MINUS -> { return "-"; }
+            case TIMES -> { return "*"; }
+            case DIV -> { return "/"; }
+            case MOD -> { return "%"; }
+            case LT -> { return "<"; }
+            case GT -> { return ">"; }
+            case LE -> { return "<="; }
+            case GE -> { return ">="; }
+            case EQ -> { return "=="; }
+            case OR -> { return "|"; }
+            case AND -> { return "&"; }
+            default -> { return ""; }
+        }
     }
 
     @Override
