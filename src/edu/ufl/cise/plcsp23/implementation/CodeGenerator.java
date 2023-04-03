@@ -298,8 +298,10 @@ public class CodeGenerator implements ASTVisitor {
             case LE -> { return "<="; }
             case GE -> { return ">="; }
             case EQ -> { return "=="; }
-            case OR -> { return "|"; }
-            case AND -> { return "&"; }
+            case OR -> { return "||"; }
+            case AND -> { return "&&"; }
+            case BITAND -> {return "&";}
+            case BITOR -> {return "|";}
             default -> { return ""; }
         }
     }
