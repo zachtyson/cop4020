@@ -3,14 +3,21 @@ package edu.ufl.cise.plcsp23.implementation;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.*;
+import edu.ufl.cise.plcsp23.runtime.ConsoleIO;
+import junit.framework.Test;
 
+import java.net.URLDecoder;
 import java.util.ArrayList;
+
+import java.util.HashSet;
 import java.util.List;
 
 public class CodeGenerator implements ASTVisitor {
     //So CodeGenerator is run after the type checker, so we can assume that the types are correct, and we can just generate the code
     //by converting the AST to Java code
     private final String packageName;
+
+    private final HashSet<String> imports = new HashSet<>();
 
     public CodeGenerator(String packageName) {
         this.packageName = packageName;
@@ -37,16 +44,22 @@ public class CodeGenerator implements ASTVisitor {
         for(NameDef param : paramList) {
             paramTypes.add(Type.convertToString(param.getType()));
         }
-        code.append("public class ").append(ident).append(" {\n");
-        code.append("public static ").append(type).append(" apply(");
+        String publicClass = "public class " + ident + " {\n";
+        StringBuilder publicStatic = new StringBuilder("public static " + type + " apply(");
         for(int i = 0; i < paramNames.size(); i++) {
-            code.append(paramTypes.get(i)).append(" ").append(paramNames.get(i));
+            publicStatic.append(paramTypes.get(i)).append(" ").append(paramNames.get(i));
             if(i != paramNames.size() - 1) {
-                code.append(", ");
+                publicStatic.append(", ");
             }
         }
+        String blockCode = (String) visitBlock(block, arg);
+        for(int i = 0; i < imports.size(); i++) {
+            code.append("import ").append(imports.toArray()[i]).append(";\n");
+        }
+        code.append(publicClass);
+        code.append(publicStatic);
         code.append(") {\n");
-        code.append((String) block.visit(this, arg));
+        code.append(blockCode);
         code.append("}\n");
         code.append("}\n");
         return code.toString();
@@ -96,9 +109,9 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr = declaration.getInitializer();
         String type = Type.convertToString(nameDef.getType());
         String ident = nameDef.getIdent().getName();
-        code.append(type).append(" ").append(ident);
+        code.append(type).append(" ").append(ident).append(";\n");
         if(expr != null) {
-            code.append(" = ").append((String) visitExpr(expr, arg));
+            code.append(ident).append(" = ").append((String) visitExpr(expr, arg));
         }
         code.append(";").append("\n");
         return code.toString();
@@ -121,8 +134,9 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws PLCException {
         StringBuilder code = new StringBuilder();
         //WriteStatement ::= write Expr
+        imports.add("edu.ufl.cise.plcsp23.runtime.ConsoleIO");
         Expr expr = writeStatement.getE();
-        code.append("System.out.println(");
+        code.append("ConsoleIO.write(");
         code.append((String) visitExpr(expr, arg));
         code.append(");").append("\n");
         return code.toString();
@@ -247,11 +261,11 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr0 = conditionalExpr.getGuard();
         Expr expr1 = conditionalExpr.getTrueCase();
         Expr expr2 = conditionalExpr.getFalseCase();
-        code.append("if (").append((String) visitExpr(expr0, arg)).append(") {\n");
+        code.append("(").append((String) visitExpr(expr0, arg)).append(" ? ");
         code.append((String) visitExpr(expr1, arg));
-        code.append("} else {\n");
+        code.append(":\n");
         code.append((String) visitExpr(expr2, arg));
-        code.append("}\n");
+        code.append(")");
 
         return code.toString();
     }
@@ -264,10 +278,11 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr0 = binaryExpr.getLeft();
         IToken.Kind op = binaryExpr.getOp();
         Expr expr1 = binaryExpr.getRight();
+        code.append("(");
         code.append((String) visitExpr(expr0, arg));
-        //todo: convert op to java code correctly
         code.append(" ").append(convertOpToString(op)).append(" ");
         code.append((String) visitExpr(expr1, arg));
+        code.append(")");
         return code.toString();
 
     }
@@ -293,8 +308,12 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
         //UnaryExpr ::= (! | - | sin | cos | atan) Expr
-        //Not implemented in Assignment 5
-        return null;
+        StringBuilder code = new StringBuilder();
+        IToken.Kind op = unaryExpr.getOp();
+        Expr expr = unaryExpr.getE();
+        code.append(convertOpToString(op)).append("( ");
+        code.append((String) visitExpr(expr, arg)).append(" )");
+        return code.toString();
     }
 
     @Override
@@ -302,7 +321,7 @@ public class CodeGenerator implements ASTVisitor {
         //Generate the Java string literal corresponding
         //to this one. (You may ignore escape
         //sequences)
-        return stringLitExpr.getValue();
+        return "\"" + stringLitExpr.getValue() + "\"";
     }
 
     @Override
@@ -327,8 +346,8 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitRandomExpr(RandomExpr randExpr, Object arg) throws PLCException {
         //Generate code for a random int in [0,256)
         //using Math.floor(Math.random() * 256)
-        int x = (int) Math.floor(Math.random()*256);
-        return String.valueOf(x);
+        imports.add("java.lang.Math");
+        return "(int) Math.floor(Math.random() * 256)";
     }
 
     @Override
