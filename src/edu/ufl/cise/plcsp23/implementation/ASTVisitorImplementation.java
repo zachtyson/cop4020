@@ -44,8 +44,40 @@ public class ASTVisitorImplementation implements ASTVisitor {
         }
 
         Type returnType = (Type) visitBlock(program.getBlock(), table);
-        if(returnType != t && t != Type.VOID && returnType != null) {
-            throw new TypeCheckException("Return type does not match function type");
+        if(returnType == null) {
+            return null;
+        }
+        if(t == Type.IMAGE) {
+            if(returnType == Type.IMAGE || returnType == Type.PIXEL || returnType == Type.STRING) {
+                return null;
+            }
+            else {
+                throw new TypeCheckException("Return type does not match function type");
+            }
+        }
+        if(t == Type.PIXEL) {
+            if(returnType == Type.PIXEL || returnType == Type.INT) {
+                return null;
+            }
+            else {
+                throw new TypeCheckException("Return type does not match function type");
+            }
+        }
+        if(t == Type.INT) {
+            if(returnType == Type.INT || returnType == Type.PIXEL) {
+                return null;
+            }
+            else {
+                throw new TypeCheckException("Return type does not match function type");
+            }
+        }
+        if(t == Type.STRING) {
+            if(returnType == Type.STRING || returnType == Type.IMAGE || returnType == Type.PIXEL || returnType == Type.INT) {
+                return null;
+            }
+            else {
+                throw new TypeCheckException("Return type does not match function type");
+            }
         }
         if(t == Type.VOID && returnType != null) {
             throw new TypeCheckException("Return type does not match function type");
@@ -655,9 +687,9 @@ public class ASTVisitorImplementation implements ASTVisitor {
             visitPixelSelector(pixelSelector, arg);
         }
         ColorChannel channelSelector = lValue.getColor();
+        NameDef nameDef = symbolTable.get(ident.getName());
         if(channelSelector != null) {
-            NameDef nameDef = symbolTable.get(ident.getName());
-            if(nameDef.getType() != Type.IMAGE || nameDef.getType() != Type.PIXEL) {
+            if(nameDef.getType() != Type.IMAGE && nameDef.getType() != Type.PIXEL) {
                 throw new TypeCheckException("Type mismatch, error at line " + lValue.getLine()+ " column " + lValue.getColumn());
             }
             if(nameDef.getType() == Type.IMAGE) {
@@ -674,7 +706,6 @@ public class ASTVisitorImplementation implements ASTVisitor {
                 return Type.INT;
             }
         } else {
-            NameDef nameDef = symbolTable.get(ident.getName());
             Type t = nameDef.getType();
             if(t == Type.IMAGE) {
                 if(pixelSelector != null) {

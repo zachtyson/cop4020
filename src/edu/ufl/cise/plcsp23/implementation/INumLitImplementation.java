@@ -23,7 +23,7 @@ public class INumLitImplementation extends ITokenImplementation implements INumL
     @Override
     public Integer getValue() {
         try {
-            return Integer.parseInt(tokenString);
+            return (int)Integer.parseInt(tokenString);
         } catch (NumberFormatException e) {
             return null;
             //This is just for debugging, since the exceptions should be thrown in the next() method
