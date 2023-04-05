@@ -39,7 +39,7 @@ public class IScannerImplementation implements IScanner {
         }
         if(t.getKind() == NUM_LIT) {
             INumLitToken n = (INumLitImplementation) t;
-            if(n.getValue() == null) {
+            if(n.getValueTest() == null) {
                 throw new LexicalException("Invalid token at line " + t.getSourceLocation().line() + " and column " + t.getSourceLocation().column() + ": " + t.getTokenString());
             }
             next_value++;

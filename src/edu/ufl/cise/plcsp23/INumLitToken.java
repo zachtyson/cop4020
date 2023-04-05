@@ -14,10 +14,10 @@ import edu.ufl.cise.plcsp23.IToken;
 
 public interface INumLitToken extends IToken {
 
-	Integer getValue();
+	int getValue();
 	//A Num_Lit token can either be a 0, or a non-zero digit followed by a sequence of digits (can't start with 0 and can't be empty)
 	//In this project, the number is a java integer, so the bounds are -2^31 to 2^31-1
 	//I'm not really experienced with interfaces but I think in this case it's identical to IToken except it has an associated value
-
+	Integer getValueTest();
 
 }
