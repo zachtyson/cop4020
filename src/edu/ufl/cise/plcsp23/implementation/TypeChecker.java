@@ -659,6 +659,7 @@ public class TypeChecker implements ASTVisitor {
         NameDef d = symbolTable.get(ident);
         if(d != null) {
             identExpr.setType(d.getType());
+            identExpr.setScope(d.getIdent().getScope());
         } else {
             throw new TypeCheckException("Identifier not found, error at line " + identExpr.getLine()+ " column " + identExpr.getColumn());
         }

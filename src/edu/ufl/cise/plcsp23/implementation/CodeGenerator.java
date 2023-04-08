@@ -37,7 +37,7 @@ public class CodeGenerator implements ASTVisitor {
         Block block = program.getBlock();
         ArrayList<String> paramNames = new ArrayList<>();
         for(NameDef param : paramList) {
-            paramNames.add(param.getIdent().getName());
+            paramNames.add(param.getIdent().getNameScope());
         }
         ArrayList<String> paramTypes = new ArrayList<>();
         for(NameDef param : paramList) {
@@ -107,7 +107,7 @@ public class CodeGenerator implements ASTVisitor {
         NameDef nameDef = declaration.getNameDef();
         Expr expr = declaration.getInitializer();
         String type = Type.convertToString(nameDef.getType());
-        String ident = nameDef.getIdent().getName();
+        String ident = nameDef.getIdent().getNameScope();
         code.append(type).append(" ").append(ident).append(";\n");
         if(expr != null) {
             code.append(ident).append(" = ").append((String) visitExpr(expr, arg));
@@ -168,7 +168,7 @@ public class CodeGenerator implements ASTVisitor {
 
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
         //Ident ::= String
-        return ident.getName();
+        return ident.getNameScope();
     }
 
     @Override
@@ -202,7 +202,7 @@ public class CodeGenerator implements ASTVisitor {
         //So currently just assume that there is no dimension
         StringBuilder code = new StringBuilder();
         Type type = nameDef.getType();
-        String name = nameDef.getIdent().getName();
+        String name = nameDef.getIdent().getNameScope();
         String typeString = Type.convertToString(type);
         code.append(typeString).append(" ").append(name);
         return code.toString();
@@ -328,7 +328,7 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //Generate name
-        return identExpr.getName();
+        return identExpr.getNameScope();
     }
 
     @Override

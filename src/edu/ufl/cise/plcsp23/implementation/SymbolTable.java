@@ -25,6 +25,7 @@ public class SymbolTable {
                 throw new TypeCheckException("Parameter " + symbolMap + " is already defined");
             }
             else {
+                n.getIdent().setScope(currentScope);
                 symbolMap.put(n.getIdent().getName(), new Symbol(n, currentScope));
             }
         }
@@ -49,6 +50,7 @@ public class SymbolTable {
     public void put(String s, NameDef n) throws PLCException{
         Symbol symbol = symbolMap.get(s);
         if(symbol == null) {
+            n.getIdent().setScope(currentScope);
             symbolMap.put(s, new Symbol(n, currentScope));
         }
         else {
@@ -57,6 +59,7 @@ public class SymbolTable {
             }
             else {
                 symbolMap.put(s, new Symbol(n, currentScope));
+                n.getIdent().setScope(currentScope);
             }
         }
     }
@@ -72,6 +75,7 @@ public class SymbolTable {
                 throw new TypeCheckException("Parameter " + symbolMap + " is already defined");
             }
             else {
+                n.getIdent().setScope(currentScope);
                 symbolMap.put(n.getIdent().getName(), new Symbol(n, currentScope));
             }
         }
