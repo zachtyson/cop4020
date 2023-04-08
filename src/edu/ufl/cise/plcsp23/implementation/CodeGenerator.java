@@ -188,7 +188,8 @@ public class CodeGenerator implements ASTVisitor {
         //ReturnStatement ::= : Expr
         Expr expr = returnStatement.getE();
         code.append("return ");
-        code.append((String) visitExpr(expr, arg));
+        String exprCode = (String) visitExpr(expr, arg);
+        code.append(exprCode);
         code.append(";").append("\n");
         return code.toString();
     }
@@ -287,7 +288,15 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr0 = conditionalExpr.getGuard();
         Expr expr1 = conditionalExpr.getTrueCase();
         Expr expr2 = conditionalExpr.getFalseCase();
-        code.append("(").append((String) visitExpr(expr0, arg)).append(" ? ");
+        code.append("(");
+        String expr0Code = (String) visitExpr(expr0, arg);
+        if(expr0 instanceof BinaryExpr) {
+            code.append("(").append(expr0Code).append(")");
+        } else {
+            code.append("(").append(expr0Code).append(" != 0 )");
+
+        }
+        code.append(" ? ");
         code.append((String) visitExpr(expr1, arg));
         code.append(":\n");
         code.append((String) visitExpr(expr2, arg));
