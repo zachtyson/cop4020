@@ -27,7 +27,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitProgram(Program program, Object arg) throws PLCException {
+    public Object visitProgram(Program program, Object arg){
         StringBuilder code = new StringBuilder();
         //Program ::= Type Ident NameDef* Block
         Type t = program.getType();
@@ -66,7 +66,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitBlock(Block block, Object arg) throws PLCException {
+    public Object visitBlock(Block block, Object arg){
         StringBuilder code = new StringBuilder();
         //Block ::= DecList StatementList
         List<Declaration> decList = block.getDecList();
@@ -101,7 +101,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
+    public Object visitDeclaration(Declaration declaration, Object arg){
         StringBuilder code = new StringBuilder();
         //Declaration::= NameDef (Expr | ε )
         NameDef nameDef = declaration.getNameDef();
@@ -110,27 +110,53 @@ public class CodeGenerator implements ASTVisitor {
         String ident = nameDef.getIdent().getNameScope();
         code.append(type).append(" ").append(ident).append(";\n");
         if(expr != null) {
-            code.append(ident).append(" = ").append((String) visitExpr(expr, arg));
+            code.append(ident).append(" = ");
+            String exprCode = (String) visitExpr(expr, arg);
+            if(expr instanceof BinaryExpr) {
+                BinaryExpr binaryExpr = (BinaryExpr) expr;
+                IToken.Kind op = binaryExpr.getOp();
+                if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ) {
+                    code.append("(").append(exprCode).append(") ? 1 : 0");
+                }
+                else {
+                    code.append(exprCode);
+                }
+            } else {
+                code.append(exprCode);
+            }
         }
         code.append(";").append("\n");
         return code.toString();
     }
 
     @Override
-    public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws PLCException {
+    public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg){
         StringBuilder code = new StringBuilder();
         //AssignmentStatement ::= LValue = Expr
         LValue lValue = assignmentStatement.getLv();
         Expr expr = assignmentStatement.getE();
         code.append((String) visitLValue(lValue, arg));
         code.append(" = ");
-        code.append((String) visitExpr(expr, arg));
+        String exprCode = (String) visitExpr(expr, arg);
+
+        if(expr instanceof BinaryExpr) {
+            BinaryExpr binaryExpr = (BinaryExpr) expr;
+            IToken.Kind op = binaryExpr.getOp();
+            if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ) {
+                code.append("(").append(exprCode).append(") ? 1 : 0");
+            }
+            else {
+                code.append(exprCode);
+            }
+        } else {
+            code.append(exprCode);
+        }
         code.append(";").append("\n");
         return code.toString();
     }
 
     @Override
-    public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws PLCException {
+    public Object visitWriteStatement(WriteStatement writeStatement, Object arg){
         StringBuilder code = new StringBuilder();
         //WriteStatement ::= write Expr
         imports.add("edu.ufl.cise.plcsp23.runtime.ConsoleIO");
@@ -142,13 +168,14 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+    public Object visitWhileStatement(WhileStatement whileStatement, Object arg){
         StringBuilder code = new StringBuilder();
         //WhileStatement ::= while Expr Block
         Expr expr = whileStatement.getGuard();
         Block block = whileStatement.getBlock();
         code.append("while(");
-        code.append((String) visitExpr(expr, arg));
+        String exprCode = (String) visitExpr(expr, arg);
+        code.append(exprCode);
         code.append(") {").append("\n");
         code.append((String) visitBlock(block, arg));
         code.append("}").append("\n");
@@ -156,7 +183,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg){
         StringBuilder code = new StringBuilder();
         //ReturnStatement ::= : Expr
         Expr expr = returnStatement.getE();
@@ -166,20 +193,20 @@ public class CodeGenerator implements ASTVisitor {
         return code.toString();
     }
 
-    public Object visitIdent(Ident ident, Object arg) throws PLCException {
+    public Object visitIdent(Ident ident, Object arg){
         //Ident ::= String
         return ident.getNameScope();
     }
 
     @Override
-    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+    public Object visitDimension(Dimension dimension, Object arg){
         //Dimension ::= Expr0 Expr1
         //Not implemented in Assignment 5
         return null;
     }
 
     @Override
-    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
+    public Object visitLValue(LValue lValue, Object arg){
         //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
         //For assignment 5, only handle the case where there is no PixelSelector and no ChannelSelector.
         //This means that the LValue is just an Ident.
@@ -189,14 +216,14 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg){
         //PixelSelector ::= [ Expr0 Expr1 ]
         //Not implemented in Assignment 5
         return null;
     }
 
     @Override
-    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+    public Object visitNameDef(NameDef nameDef, Object arg){
         //NameDef ::= Type Ident (Dimension | ε )
         //(Do not implement dimensions in assignment 5)
         //So currently just assume that there is no dimension
@@ -209,7 +236,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
 
-    public Object visitExpr(Expr expr, Object arg) throws PLCException {
+    public Object visitExpr(Expr expr, Object arg){
         //Expr ::= ConditionalExpr | BinaryExpr |
         //UnaryExpr | StringLitExpr | IdentExpr |
         //NumLitExpr | ZExpr | RandExpr |
@@ -254,7 +281,7 @@ public class CodeGenerator implements ASTVisitor {
         return null;
     }
 
-    public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+    public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) {
         StringBuilder code = new StringBuilder();
         //ConditionalExpr ::= Expr0 Expr1 Expr2
         Expr expr0 = conditionalExpr.getGuard();
@@ -270,7 +297,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
+    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) {
         //BinaryExpr ::= Expr0 (+| - | * | / | % | < | > |
         //<= | >= |== | | | || & | && | **) Expr1
         StringBuilder code = new StringBuilder();
@@ -306,12 +333,13 @@ public class CodeGenerator implements ASTVisitor {
             case AND -> { return "&&"; }
             case BITAND -> {return "&";}
             case BITOR -> {return "|";}
+            case BANG -> {return "!";}
             default -> { return ""; }
         }
     }
 
     @Override
-    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg){
         //UnaryExpr ::= (! | - | sin | cos | atan) Expr
         StringBuilder code = new StringBuilder();
         IToken.Kind op = unaryExpr.getOp();
@@ -322,7 +350,7 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg){
         //Generate the Java string literal corresponding
         //to this one. (You may ignore escape
         //sequences)
@@ -330,25 +358,25 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+    public Object visitIdentExpr(IdentExpr identExpr, Object arg) {
         //Generate name
         return identExpr.getNameScope();
     }
 
     @Override
-    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+    public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg){
         //This isn't even mentioned in the assignment, but I'm assuming it's just a number
         return String.valueOf(numLitExpr.getValue());
     }
 
     @Override
-    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+    public Object visitZExpr(ZExpr zExpr, Object arg){
         //Constant with value 255
         return String.valueOf(255);
     }
 
     @Override
-    public Object visitRandomExpr(RandomExpr randExpr, Object arg) throws PLCException {
+    public Object visitRandomExpr(RandomExpr randExpr, Object arg){
         //Generate code for a random int in [0,256)
         //using Math.floor(Math.random() * 256)
         imports.add("java.lang.Math");
@@ -356,28 +384,28 @@ public class CodeGenerator implements ASTVisitor {
     }
 
     @Override
-    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostFix, Object arg) throws PLCException {
+    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostFix, Object arg){
         //UnaryExprPostfix::= PrimaryExpr (PixelSelector | ε ) (ChannelSelector | ε )
         //Not implemented in Assignment 5
         return null;
     }
 
     @Override
-    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg){
         //PixelFunctionExpr ::= ( x_cart | y_cart | a_polar | r_polar ) PixelSelector
         //Not implemented in Assignment 5
         return null;
     }
 
     @Override
-    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExp, Object arg) throws PLCException {
+    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExp, Object arg){
         //PredeclaredVarExpr ::= x | y | a | r
         //Not implemented in Assignment 5
         return null;
     }
 
     @Override
-    public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
+    public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg){
         //ExpandedPixelExpr ::= Expr0 Expr1 Expr2
         //Not implemented in Assignment 5
         return null;
