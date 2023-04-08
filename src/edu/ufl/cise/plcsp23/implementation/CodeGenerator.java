@@ -279,8 +279,12 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr1 = binaryExpr.getRight();
         code.append("(");
         code.append((String) visitExpr(expr0, arg));
-        code.append(" ").append(convertOpToString(op)).append(" ");
+        String opString = convertOpToString(op);
+        code.append(" ").append(opString).append(" ");
         code.append((String) visitExpr(expr1, arg));
+//        if(opString.equals("==") || opString.equals("!=")) {
+//            code.append("? 1 : 0");
+//        }
         code.append(")");
         return code.toString();
 
