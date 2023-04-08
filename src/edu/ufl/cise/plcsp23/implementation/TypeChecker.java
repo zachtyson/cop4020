@@ -11,7 +11,7 @@ import java.util.List;
 //A name can only be used once
 //A variable must be declared before it is used
 //A variable must be initialized before it is referenced
-public class ASTVisitorImplementation implements ASTVisitor {
+public class TypeChecker implements ASTVisitor {
     //Assuming that symbol table is a hash map
     //So this part is for checking types and scope
 

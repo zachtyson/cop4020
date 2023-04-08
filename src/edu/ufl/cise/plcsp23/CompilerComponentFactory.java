@@ -10,7 +10,7 @@
 
 package edu.ufl.cise.plcsp23;
 
-import edu.ufl.cise.plcsp23.implementation.ASTVisitorImplementation;
+import edu.ufl.cise.plcsp23.implementation.TypeChecker;
 import edu.ufl.cise.plcsp23.implementation.CodeGenerator;
 import edu.ufl.cise.plcsp23.implementation.IParserImplementation;
 import edu.ufl.cise.plcsp23.implementation.IScannerImplementation;
@@ -37,7 +37,7 @@ public class CompilerComponentFactory {
 
 	public static ASTVisitor makeTypeChecker() {
 		//code to instantiate a return an ASTVisitor for type checking
-		return new ASTVisitorImplementation();
+		return new TypeChecker();
 	}
 
 	public static ASTVisitor makeCodeGenerator(String packageName) {
