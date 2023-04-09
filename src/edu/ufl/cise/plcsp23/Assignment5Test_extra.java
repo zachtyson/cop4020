@@ -451,4 +451,49 @@ class Assignment5Test_extra {
         Object result = genCodeAndRun(input, "", params);
         assertEquals(255, (Integer) result);
     }
+
+    @Test
+    void custom9a() throws Exception {
+        //ZExpr always returns 255 per the spec
+        String input = """
+                int test(int val,int val2){
+                :if (val > 0 && val2 > 0) ? val ? val2.
+                }
+                """;
+        int a = 1;
+        int b = 2;
+        Object[] params = {a, b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(1, (Integer) result);
+    }
+
+    @Test
+    void custom9b() throws Exception {
+        //ZExpr always returns 255 per the spec
+        String input = """
+                int test(int val,int val2){
+                :if (val > 0 && val2 == 0) ? val ? val2.
+                }
+                """;
+        int a = 1;
+        int b = 2;
+        Object[] params = {a, b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(2, (Integer) result);
+    }
+
+    @Test
+    void custom9c() throws Exception {
+        //ZExpr always returns 255 per the spec
+        String input = """
+                int test(int val,int val2){
+                :if (val == 0 && val2 == 0) ? val ? val2+ val.
+                }
+                """;
+        int a = 1;
+        int b = 2;
+        Object[] params = {a, b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(3, (Integer) result);
+    }
 }
