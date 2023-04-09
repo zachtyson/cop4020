@@ -369,4 +369,86 @@ class Assignment5Test_extra {
         int result = (int) genCodeAndRun(input, "", params);
         assertEquals(625, (Integer) result);
     }
+
+    @Test
+    void custom5a() throws Exception {
+        String input = """
+                int test(int val,int val2){
+                :if (val > val2) ? val ? val2.
+                }
+                """;
+        int v = 5;
+        int v2 = 4;
+        Object[] params = {v, v2};
+        int result = (int) genCodeAndRun(input, "", params);
+        assertEquals(5, (Integer) result);
+    }
+
+    @Test
+    void custom5b() throws Exception {
+        String input = """
+                int test(int val,int val2){
+                :if (val > val2) ? val ? val2.
+                }
+                """;
+        int v = 5;
+        int v2 = 6;
+        Object[] params = {v, v2};
+        int result = (int) genCodeAndRun(input, "", params);
+        assertEquals(6, (Integer) result);
+    }
+
+    @Test
+    void custom5c() throws Exception {
+        String input = """
+                int test(int val,int val2){
+                :if (val == val2) ? val ? val2.
+                }
+                """;
+        int v = 5;
+        int v2 = 10;
+        Object[] params = {v, v2};
+        int result = (int) genCodeAndRun(input, "", params);
+        assertEquals(10, (Integer) result);
+    }
+
+    @Test
+    void custom6() throws Exception {
+        String input = """
+                string test(string val){
+                :val + "test".
+                }
+                """;
+        String v = "yurr";
+        Object[] params = {v};
+        String result = (String) genCodeAndRun(input, "", params);
+        assertEquals("yurrtest",  result);
+    }
+
+    @Test
+    void custom7() throws Exception {
+        String input = """
+                int test(){
+                int aa = rand.
+                write aa.
+                :aa.
+                }
+                """;
+        Object[] params = {};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(Integer.class, result.getClass());
+    }
+
+    @Test
+    void custom8() throws Exception {
+        //ZExpr always returns 255 per the spec
+        String input = """
+                int test(){
+                :X.
+                }
+                """;
+        Object[] params = {};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(255, (Integer) result);
+    }
 }
