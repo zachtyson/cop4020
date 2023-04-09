@@ -52,6 +52,9 @@ public class CodeGenerator implements ASTVisitor {
             }
         }
         String blockCode = (String) visitBlock(block, arg);
+        if(packageName != null && !packageName.isEmpty()) {
+            code.append("package ").append(packageName).append(";\n");
+        }
         for(int i = 0; i < imports.size(); i++) {
             code.append("import ").append(imports.toArray()[i]).append(";\n");
         }
