@@ -314,8 +314,15 @@ public class CodeGenerator implements ASTVisitor {
         IToken.Kind op = binaryExpr.getOp();
         Expr expr1 = binaryExpr.getRight();
         code.append("(");
-        code.append((String) visitExpr(expr0, arg));
+        String expr0Code = (String) visitExpr(expr0, arg);
         String opString = convertOpToString(op);
+        if (opString.equals("**")){
+            imports.add("java.lang.Math");
+            String expr1Code = (String) visitExpr(expr1, arg);
+            code.append("(int) Math.pow(").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+        }
+        code.append(expr0Code);
         code.append(" ").append(opString).append(" ");
         code.append((String) visitExpr(expr1, arg));
 //        if(opString.equals("==") || opString.equals("!=")) {
@@ -343,6 +350,7 @@ public class CodeGenerator implements ASTVisitor {
             case BITAND -> {return "&";}
             case BITOR -> {return "|";}
             case BANG -> {return "!";}
+            case EXP -> {return "**";}
             default -> { return ""; }
         }
     }
