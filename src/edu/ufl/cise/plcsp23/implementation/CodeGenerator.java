@@ -14,7 +14,7 @@ import java.util.List;
 public class CodeGenerator implements ASTVisitor {
     //So CodeGenerator is run after the type checker, so we can assume that the types are correct, and we can just generate the code
     //by converting the AST to Java code
-    private final String packageName;
+    private String packageName = null;
 
     private final HashSet<String> imports = new HashSet<>();
 

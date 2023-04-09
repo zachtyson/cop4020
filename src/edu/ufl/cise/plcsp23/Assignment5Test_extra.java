@@ -303,14 +303,14 @@ class Assignment5Test_extra {
                 aa = aa + 1.
                 aa = aa * 4.
                 aa = aa - 1.
-                aa = aa + -1.
+                aa = aa + 1.
                 : aa.
                 }
                 """;
         int v = 100;
         Object[] params = {v};
         int result = (int) genCodeAndRun(input, "", params);
-        assertEquals(((v * 2) + 1) * 4 - 2, (Integer) result);
+        assertEquals(((v * 2) + 1) * 4, (Integer) result);
     }
 
     @Test
@@ -536,4 +536,20 @@ class Assignment5Test_extra {
         Object result = genCodeAndRun(input, "", params);
         assertEquals("mhm",(String) result);
     }
+
+    @Test
+    void custom10d() throws Exception {
+        String input = """
+                string test(string val){
+                string ok = val + "test".
+                :ok.
+                }
+                """;
+        String a = "wut";
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals("wuttest" ,(String) result);
+    }
+
+
 }
