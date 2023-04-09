@@ -189,7 +189,18 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr = returnStatement.getE();
         code.append("return ");
         String exprCode = (String) visitExpr(expr, arg);
-        code.append(exprCode);
+        if(expr instanceof BinaryExpr) {
+            BinaryExpr binaryExpr = (BinaryExpr) expr;
+            IToken.Kind op = binaryExpr.getOp();
+            if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ) {
+                code.append("(").append(exprCode).append(") ? 1 : 0");
+            }
+            else {
+                code.append(exprCode);
+            }
+        } else {
+            code.append(exprCode);
+        }
         code.append(";").append("\n");
         return code.toString();
     }
@@ -325,9 +336,6 @@ public class CodeGenerator implements ASTVisitor {
         code.append(expr0Code);
         code.append(" ").append(opString).append(" ");
         code.append((String) visitExpr(expr1, arg));
-//        if(opString.equals("==") || opString.equals("!=")) {
-//            code.append("? 1 : 0");
-//        }
         code.append(")");
         return code.toString();
 
