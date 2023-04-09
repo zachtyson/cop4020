@@ -496,4 +496,44 @@ class Assignment5Test_extra {
         Object result = genCodeAndRun(input, "", params);
         assertEquals(3, (Integer) result);
     }
+
+    @Test
+    void custom10a() throws Exception {
+        String input = """
+                int test(string val){
+                :val == "nottest".
+                }
+                """;
+        String a = "test";
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(0,(Integer) result);
+    }
+
+    @Test
+    void custom10b() throws Exception {
+        String input = """
+                int test(string val){
+                :val == "test".
+                }
+                """;
+        String a = "test";
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(1,(Integer) result);
+    }
+
+    @Test
+    void custom10c() throws Exception {
+        String input = """
+                string test(string val){
+                string ok = if (val == "test") ? "mhm" ? "idk".
+                :ok.
+                }
+                """;
+        String a = "test";
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals("mhm",(String) result);
+    }
 }
