@@ -642,6 +642,7 @@ public class TypeChecker implements ASTVisitor {
         SymbolTable symbolTable = (SymbolTable) arg;
         String identName = ident.getName();
         if(symbolTable.get(identName) != null) {
+            ident.setDef(symbolTable.get(identName));
             return null;
         } else {
             throw new TypeCheckException("Identifier not found, error at line " + ident.getLine()+ " column " + ident.getColumn());
