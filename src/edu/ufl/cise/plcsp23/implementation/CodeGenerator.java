@@ -372,12 +372,14 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg){
         //UnaryExpr ::= (! | - | sin | cos | atan) Expr
-        StringBuilder code = new StringBuilder();
-        IToken.Kind op = unaryExpr.getOp();
-        Expr expr = unaryExpr.getE();
-        code.append(convertOpToString(op)).append("( ");
-        code.append((String) visitExpr(expr, arg)).append(" )");
-        return code.toString();
+//        StringBuilder code = new StringBuilder();
+//        IToken.Kind op = unaryExpr.getOp();
+//        Expr expr = unaryExpr.getE();
+//        code.append(convertOpToString(op)).append("( ");
+//        code.append((String) visitExpr(expr, arg)).append(" )");
+//        return code.toString();
+        return null;
+        //not implemented in assignment 5
     }
 
     @Override
