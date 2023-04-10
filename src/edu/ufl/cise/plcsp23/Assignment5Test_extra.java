@@ -1,9 +1,11 @@
 package edu.ufl.cise.plcsp23;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.image.BufferedImage;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.ast.AST;
@@ -436,6 +438,8 @@ class Assignment5Test_extra {
                 """;
         Object[] params = {};
         Object result = genCodeAndRun(input, "", params);
+        Integer i = (Integer) result;
+        Assertions.assertTrue(i >= 0 && i <= 255);
         assertEquals(Integer.class, result.getClass());
     }
 
@@ -549,6 +553,23 @@ class Assignment5Test_extra {
         Object[] params = {a};
         Object result = genCodeAndRun(input, "", params);
         assertEquals("wuttest" ,(String) result);
+    }
+
+    @Test
+    void custom11() throws Exception {
+        String input = """
+                int test(int val){
+                int out = 1.
+                while(1) {
+                out = out * val.
+                }.
+                :out.
+                }
+                """;
+        int a = 1;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(1,(Integer) result);
     }
 
 
