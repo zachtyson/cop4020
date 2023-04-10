@@ -242,7 +242,7 @@ class Assignment5Test_extra {
 				int aa = val.
 				int g = aa.
 				write val.
-				while (!(g == 0)) {
+				while ((g == 0)) {
 				  int aa = val/2.
 				  write "outer loop:  aa=".
 				  write aa.
@@ -448,7 +448,7 @@ class Assignment5Test_extra {
         //ZExpr always returns 255 per the spec
         String input = """
                 int test(){
-                :X.
+                :Z.
                 }
                 """;
         Object[] params = {};
@@ -552,24 +552,82 @@ class Assignment5Test_extra {
         String a = "wut";
         Object[] params = {a};
         Object result = genCodeAndRun(input, "", params);
-        assertEquals("wuttest" ,(String) result);
+        assertEquals("wuttest", (String) result);
     }
 
     @Test
     void custom11() throws Exception {
         String input = """
                 int test(int val){
-                int out = 1.
-                while(1) {
-                out = out * val.
+                while ( val > 0) {
+                :val -1.
                 }.
+                :val.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(20,(Integer) result);
+    }
+
+    @Test
+    void custom12() throws Exception {
+        String input = """
+                int test(int val){
+                int out.
+                out = if val ? 2 ? 3.
                 :out.
                 }
                 """;
         int a = 1;
         Object[] params = {a};
         Object result = genCodeAndRun(input, "", params);
-        assertEquals(1,(Integer) result);
+        assertEquals(2,(Integer) result);
+    }
+
+    @Test
+    void custom13() throws Exception {
+        String input = """
+                int test(int val){
+                int out = 45.
+                out = out % val.
+                :out.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(3,(Integer) result);
+    }
+
+    @Test
+    void custom14() throws Exception {
+        String input = """
+                string test(int val){
+                string out.
+                out = val.
+                :out.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals("21",(String) result);
+    }
+
+    @Test
+    void custom15() throws Exception {
+        String input = """
+                string test(int val){
+                string out=  val.
+                :out.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals("21",(String) result);
     }
 
 
