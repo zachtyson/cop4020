@@ -114,6 +114,12 @@ public class CodeGenerator implements ASTVisitor {
         code.append(type).append(" ").append(ident).append(";\n");
         if(expr != null) {
             code.append(ident).append(" = ");
+            boolean hasEndingParen = false;
+            if(nameDef.getType() == Type.STRING) {
+                code.append("String.valueOf(");
+                hasEndingParen = true;
+            }
+
             String exprCode = (String) visitExpr(expr, arg);
             if(expr instanceof BinaryExpr) {
                 BinaryExpr binaryExpr = (BinaryExpr) expr;
@@ -126,6 +132,9 @@ public class CodeGenerator implements ASTVisitor {
                 }
             } else {
                 code.append(exprCode);
+            }
+            if(hasEndingParen) {
+                code.append(")");
             }
         }
         code.append(";").append("\n");
@@ -141,6 +150,27 @@ public class CodeGenerator implements ASTVisitor {
         code.append((String) visitLValue(lValue, arg));
         code.append(" = ");
         String exprCode = (String) visitExpr(expr, arg);
+        boolean hasEndingParen = false;
+        //Assignment Compatibility
+        //image image
+        //      pixel
+        //      string
+        //pixel pixel
+        //      int
+        //int   int
+        //      pixel
+        //string string
+        //      image
+        //      pixel
+        //      int
+        //we are not error checking, since this should be done in the type checker
+        //this is just a reminder tbh
+
+        if(lValue.getIdent().getDef().getType() == Type.STRING) {
+            code.append("String.valueOf(");
+            hasEndingParen = true;
+        }
+
 
         if(expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) expr;
@@ -153,6 +183,9 @@ public class CodeGenerator implements ASTVisitor {
             }
         } else {
             code.append(exprCode);
+        }
+        if(hasEndingParen) {
+            code.append(")");
         }
         code.append(";").append("\n");
         return code.toString();
