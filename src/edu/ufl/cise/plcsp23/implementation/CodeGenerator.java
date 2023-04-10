@@ -225,6 +225,9 @@ public class CodeGenerator implements ASTVisitor {
         //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
         //For assignment 5, only handle the case where there is no PixelSelector and no ChannelSelector.
         //This means that the LValue is just an Ident.
+        if(lValue.getPixelSelector() != null || lValue.getColor() != null) {
+            throw new UnsupportedOperationException("PixelSelector and ChannelSelector not supported in Assignment 5");
+        }
         Ident ident = lValue.getIdent();
         return visitIdent(ident, arg);
 
