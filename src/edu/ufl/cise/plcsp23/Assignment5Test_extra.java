@@ -740,6 +740,49 @@ class Assignment5Test_extra {
         assertEquals(20,(Integer) result);
     }
 
+    @Test
+    void custom20() throws Exception {
+        //Tests basic arithmetic
+        String input = """
+                int test(int val){
+                    while (val + val * val) {
+                        write val.
+                        :val - 1.
+                    }.
+                    :2.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(20,(Integer) result);
+    }
+
+    @Test
+    void custom21() throws Exception {
+        //Tests basic arithmetic
+        String input = """
+                int test(int val){
+                    int hello = rand.
+                    while (hello) {
+                        while(hello) {
+                        string ye = hello.
+                        ye = ye + "hello".
+                        write ye.
+                        :rand.
+                        }.
+                        
+                    }.
+                    write "rolled a zero".
+                    :0.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(20,(Integer) result);
+    }
+
 
 
 
