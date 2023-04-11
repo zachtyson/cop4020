@@ -124,7 +124,7 @@ public class CodeGenerator implements ASTVisitor {
             if(expr instanceof BinaryExpr) {
                 BinaryExpr binaryExpr = (BinaryExpr) expr;
                 IToken.Kind op = binaryExpr.getOp();
-                if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ) {
+                if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
                     code.append("(").append(exprCode).append(") ? 1 : 0");
                 }
                 else {
@@ -370,6 +370,28 @@ public class CodeGenerator implements ASTVisitor {
             imports.add("java.lang.Math");
             String expr1Code = (String) visitExpr(expr1, arg);
             code.append("(int) Math.pow(").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+        }
+        // && and || are SO ANNOYING AKLDJASKDLJASDKLASJ
+        // Cause both the clauses need to be converted from int to boolean but ONLY if they are not already boolean
+        // So we need to check if they are boolean and if they are not, then we need to convert them to boolean
+        // Cause this: :if (val > 0 && val2 > 0) ? val ? val2. we don't need to convert val and val2 to boolean
+        // But this: if(val && val2) ? val ? val2. We need to convert val and val2 to boolean
+        // So we need to check if the left and right expressions are boolean or not
+        // So I guess we can just check to see if it's a binary expression or not???
+        else if (opString.equals("&&") || opString.equals("||")) {
+            if (expr0 instanceof BinaryExpr) {
+                code.append("(").append(expr0Code).append(")");
+            } else {
+                code.append("(").append(expr0Code).append(" != 0 )");
+            }
+            code.append(" ").append(opString).append(" ");
+            if (expr1 instanceof BinaryExpr) {
+                code.append("(").append((String) visitExpr(expr1, arg)).append(")");
+            } else {
+                code.append("(").append((String) visitExpr(expr1, arg)).append(" != 0 )");
+            }
+            code.append(")");
             return code.toString();
         }
         code.append(expr0Code);
