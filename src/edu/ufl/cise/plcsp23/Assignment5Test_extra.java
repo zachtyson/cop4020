@@ -765,6 +765,8 @@ class Assignment5Test_extra {
                 int test(int val){
                     int hello = rand.
                     while (hello) {
+                        int ye = hello.
+                        write ye.
                         while(hello) {
                         string ye = hello.
                         ye = ye + "hello".
@@ -780,7 +782,9 @@ class Assignment5Test_extra {
         int a = 21;
         Object[] params = {a};
         Object result = genCodeAndRun(input, "", params);
-        assertEquals(20,(Integer) result);
+        Integer i = (Integer) result;
+        Assertions.assertTrue(i >= 0 && i <= 255);
+        assertEquals(Integer.class, result.getClass());
     }
 
 
