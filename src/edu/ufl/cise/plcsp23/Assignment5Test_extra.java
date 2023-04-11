@@ -661,7 +661,7 @@ class Assignment5Test_extra {
     }
 
     @Test
-    void custom17() throws Exception {
+    void custom16c() throws Exception {
         String input = """
                 int test(int val, int val2){
                 int out = val || val2.
@@ -673,7 +673,57 @@ class Assignment5Test_extra {
         Object[] params = {a,b};
         Object result = genCodeAndRun(input, "", params);
         assertEquals(1,(Integer) result);
+        a = 0;
+        params = new Object[]{a,b};
+        result = genCodeAndRun(input, "", params);
+        assertEquals(0,(Integer) result);
     }
+
+    @Test
+    void custom17() throws Exception {
+        //Tests basic arithmetic
+        String input = """
+                int test(int val){
+                int one = val + 1.
+                int two = one - 2.
+                int three = two * 3.
+                one = three / 4.
+                two = one % 99.
+                :two ** 2.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(225,(Integer) result);
+    }
+
+    @Test
+    void custom18() throws Exception {
+        //Tests basic arithmetic
+        String input = """
+                int test(int val, int val2){
+                int one = val > val2.
+                int two = val < val2.
+                int three = val == val2.
+                int four = val >= val2.
+                int five = val <= val2.
+                write one.
+                write two.
+                write three.
+                write four.
+                write five.
+                :one + two + three + four + five.
+                }
+                """;
+        int a = 21;
+        int b = 21;
+        Object[] params = {a,b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(3,(Integer) result);
+    }
+
+
 
 
 }
