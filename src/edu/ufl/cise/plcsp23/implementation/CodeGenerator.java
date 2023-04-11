@@ -212,6 +212,14 @@ public class CodeGenerator implements ASTVisitor {
         code.append("while(");
         String exprCode = (String) visitExpr(expr, arg);
         code.append(exprCode);
+        if(expr instanceof NumLitExpr || expr instanceof IdentExpr || expr instanceof ZExpr) {
+            code.append(" != 0");
+        } else if (expr instanceof BinaryExpr binaryExpr) {
+            IToken.Kind op = binaryExpr.getOp();
+            if(op != IToken.Kind.LE && op != IToken.Kind.LT && op != IToken.Kind.GE && op != IToken.Kind.GT && op != IToken.Kind.EQ) {
+                code.append(" != 0");
+            }
+        }
         code.append(") {").append("\n");
         code.append((String) visitBlock(block, arg));
         code.append("}").append("\n");
