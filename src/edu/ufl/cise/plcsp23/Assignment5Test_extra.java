@@ -787,6 +787,27 @@ class Assignment5Test_extra {
         assertEquals(Integer.class, result.getClass());
     }
 
+    @Test
+    void gcd() throws Exception {
+        String input = """
+				int f(int aa, int bb) {
+					int i = if (aa < bb) ? aa ? bb.
+					int ret = 1.
+					while i > 1 {
+						ret = if ((aa % i == 0) && (bb % i == 0)) ? i ? 1.
+						i = if (ret > 1) ? 1 ? i.
+						i = i - 1.
+					}.
+					:ret.
+				}
+				""";
+        int aa = 65;
+        int bb = 52;
+        Object[] params = { aa, bb };
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(13, (Integer) result);
+    }
+
 
 
 
