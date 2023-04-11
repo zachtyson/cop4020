@@ -723,6 +723,23 @@ class Assignment5Test_extra {
         assertEquals(3,(Integer) result);
     }
 
+    @Test
+    void custom19() throws Exception {
+        //Tests basic arithmetic
+        String input = """
+                int test(int val){
+                    while (Z*Z) {
+                        write val.
+                        :val - 1.
+                    }.
+                }
+                """;
+        int a = 21;
+        Object[] params = {a};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(20,(Integer) result);
+    }
+
 
 
 
