@@ -630,5 +630,50 @@ class Assignment5Test_extra {
         assertEquals("21",(String) result);
     }
 
+    @Test
+    void custom16a() throws Exception {
+        String input = """
+                int test(int val, int val2){
+                int out = val && val2.
+                :out.
+                }
+                """;
+        int a = 21;
+        int b = 0;
+        Object[] params = {a,b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(0,(Integer) result);
+    }
+
+    @Test
+    void custom16b() throws Exception {
+        String input = """
+                int test(int val, int val2){
+                int out = val && val2.
+                :out.
+                }
+                """;
+        int a = 21;
+        int b = 16;
+        Object[] params = {a,b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(1,(Integer) result);
+    }
+
+    @Test
+    void custom17() throws Exception {
+        String input = """
+                int test(int val, int val2){
+                int out = val || val2.
+                :out.
+                }
+                """;
+        int a = 21;
+        int b = 0;
+        Object[] params = {a,b};
+        Object result = genCodeAndRun(input, "", params);
+        assertEquals(1,(Integer) result);
+    }
+
 
 }
