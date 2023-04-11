@@ -11,7 +11,7 @@ import java.util.List;
 public class SymbolTable {
     private final HashMap<String, Symbol> symbolMap;
 
-    private int currentScope = 0;
+    public int currentScope = 0;
 
     public SymbolTable(List<NameDef> paramList) throws PLCException{
         //Honestly I don't even think I need to put anything in here
@@ -67,6 +67,7 @@ public class SymbolTable {
     public void put(List<NameDef> paramList) throws PLCException {
         for(NameDef n : paramList) {
             symbolMap.put(n.getIdent().getName(), new Symbol(n, currentScope));
+            n.getIdent().setScope(currentScope);
             Type paramType = n.getType();
             if(paramType == Type.VOID) {
                 throw new TypeCheckException("Parameter " + symbolMap + " has no type");

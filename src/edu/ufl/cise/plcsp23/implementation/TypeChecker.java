@@ -673,6 +673,7 @@ public class TypeChecker implements ASTVisitor {
         //Ident must be in the current scope
         SymbolTable symbolTable = (SymbolTable) arg;
         Ident ident = lValue.getIdent();
+        ident.setScope(symbolTable.get(ident.getName()).getIdent().getScope());
         visitIdent(ident, arg);
         //Ident.type    PixelSelector   ChannelSelector     LValue.type
         //image         ε               ε                  image
