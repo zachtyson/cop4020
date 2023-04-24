@@ -29,7 +29,6 @@ public class INumLitImplementation extends ITokenImplementation implements INumL
         }
     }
 
-    @Override
     public Integer getValueTest() {
         try {
             return (int)Integer.parseInt(tokenString);
