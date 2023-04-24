@@ -2,7 +2,10 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.ast.*;
+import edu.ufl.cise.plcsp23.runtime.FileURLIO;
+import edu.ufl.cise.plcsp23.runtime.*;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -106,7 +109,93 @@ public class CodeGenerator implements ASTVisitor {
         //Declaration::= NameDef (Expr | ε )
         NameDef nameDef = declaration.getNameDef();
         Expr expr = declaration.getInitializer();
+        String exprCode = (String) visitExpr(expr, arg);
         String type = Type.convertToString(nameDef.getType());
+        if(type == "pixel") {
+            type = "int";
+            //Initializers when var is pixel
+            //Java type is int, rhs is pixel, use
+            //PixelOps.pack
+            //see cg11c
+            imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+            String ident = nameDef.getIdent().getNameScope();
+            code.append(type).append(" ").append(ident).append(";\n");
+            code.append(ident).append(" = PixelOps.pack(").append(exprCode).append(");\n");
+
+
+        } else if (type == "image") {
+            type = "BufferedImage";
+            imports.add("java.awt.image.BufferedImage");
+            if(nameDef.getDimension() == null) {
+                //If NameDef.dimension == null
+                //There must be an initializer from which the
+                //size can be determined.
+                //Initializer has type string.
+                //Assume this is a url or filename. Use
+                //FileURLIO.readImage.
+                //see cg20.
+                //Initializer has type image. Use
+                //ImageOps.cloneImage.
+                //see cg11
+
+                //So the initializer can be either a string or an image
+
+                //String:
+                imports.add("edu.ufl.cise.plcsp23.runtime.FileURLIO");
+                String ident = nameDef.getIdent().getNameScope();
+                code.append(type).append(" ").append(ident).append(";\n");
+                if(expr.getType() == Type.STRING) {
+                    code.append(ident).append(" = FileURLIO.readImage(").append(exprCode).append(");\n");
+
+                }
+                else if(expr.getType() == Type.IMAGE) {
+                    code.append(ident).append(" = ImageOps.cloneImage(").append(exprCode).append(");\n");
+                }
+
+            }
+            else {
+                //If NameDef.dimension != null, an image of
+                //this size is created. (Default pixel values are
+                //ff000000).
+                //If no initializer, use ImageOps.makeImage.
+                //see cg10a
+                //If string initializer, use readImage overload
+                //with size parameters.
+                //see cg11b
+                //If image initializer, use copyAndResize
+                //see cg11a
+
+                //So like [2, 3] is the size of the image, I think
+                //Default pixel values are ff000000 so
+                String widthString = visitExpr(nameDef.getDimension().getWidth(), arg).toString();
+                String heightString = visitExpr(nameDef.getDimension().getHeight(), arg).toString();
+                if(expr == null) {
+                    //use ImageOps.makeImage
+                    imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                    String ident = nameDef.getIdent().getNameScope();
+                    code.append(type).append(" ").append(ident).append(";\n");
+                    code.append(ident).append(" = ImageOps.makeImage(").append(widthString).append(", ").append(heightString).append(");\n");
+
+                }
+                else {
+                    if(expr.getType() == Type.STRING) {
+                        //use readImage overload with size parameters
+                        imports.add("edu.ufl.cise.plcsp23.runtime.FileURLIO");
+                        String ident = nameDef.getIdent().getNameScope();
+                        code.append(type).append(" ").append(ident).append(";\n");
+                        code.append(ident).append(" = FileURLIO.readImage(").append(exprCode).append(", ").append(widthString).append(", ").append(heightString).append(");\n");
+                    }
+                    else if (expr.getType() == Type.IMAGE) {
+                        //use copyAndResize
+                        imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                        String ident = nameDef.getIdent().getNameScope();
+                        code.append(type).append(" ").append(ident).append(";\n");
+                        code.append(ident).append(" = ImageOps.copyAndResize(").append(exprCode).append(", ").append(widthString).append(", ").append(heightString).append(");\n");
+                    }
+                }
+            }
+            return code.toString();
+        }
         String ident = nameDef.getIdent().getNameScope();
         code.append(type).append(" ").append(ident).append(";\n");
         if(expr != null) {
@@ -117,7 +206,6 @@ public class CodeGenerator implements ASTVisitor {
                 hasEndingParen = true;
             }
 
-            String exprCode = (String) visitExpr(expr, arg);
             if(expr instanceof BinaryExpr) {
                 BinaryExpr binaryExpr = (BinaryExpr) expr;
                 IToken.Kind op = binaryExpr.getOp();
