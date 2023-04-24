@@ -596,8 +596,62 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostFix, Object arg){
         //UnaryExprPostfix::= PrimaryExpr (PixelSelector | ε ) (ChannelSelector | ε )
-        //Not implemented in Assignment 5
-        return null;
+        Type primaryExprType = unaryExprPostFix.getPrimary().getType();
+        if(primaryExprType == Type.IMAGE) {
+            //case 1:
+            //pixelselector exists, channel selector does not
+            //use imageOps.getRGB
+            if(unaryExprPostFix.getPixel() != null && unaryExprPostFix.getColor() == null) {
+                imports.add("java.awt.image.*");
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                //Example
+                //a[x,y]
+                //ImageOps.getRGB(a,x,y)
+                //see test cg6_0
+                return "ImageOps.getRGB(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getX(),arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getY(),arg) + ")";
+            }
+            else if (unaryExprPostFix.getPixel() == null && unaryExprPostFix.getColor() != null) {
+                //case 2:
+                //PrimaryExpr PixelSelector ChannelSelector
+                //Use PixelOps method to get color from pixel
+                //and ImageOps.getRGB
+                //Example:
+                //a[x,y]:red
+                //PixelOps.red(ImageOps.getRGB(a,x,y)
+                //see test cg6_1
+                imports.add("java.awt.image.*");
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+                return "PixelOps." + unaryExprPostFix.getColor().name().toLowerCase() + "(ImageOps.getRGB(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getX(),arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getY(),arg) + "))";
+            }
+            else {
+                //case 3:
+                //PrimaryExpr ChannelSelector
+                //Use ImageOps extract routine
+                //Example:
+                //a:red
+                //ImageOps.extractRed(a)
+                //see test cg6_2
+                imports.add("java.awt.image.*");
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                String c = unaryExprPostFix.getColor().name().toLowerCase();
+                return "ImageOps.extract" + c.substring(0,1).toUpperCase() + c.substring(1) + "(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ")";
+
+            }
+
+        }
+        else {
+            //PrimaryExpr has type pixel
+            //PixelSelector and ChannelSelector must exist
+            //Use PixelOps red,grn, or blu
+            //Example:
+            //a:red
+            //PixelOps.red(a)
+            //see test cg6_3
+            imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+            String c = unaryExprPostFix.getColor().name().toLowerCase();
+            return "PixelOps."+c+"(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ")";
+        }
     }
 
     @Override
