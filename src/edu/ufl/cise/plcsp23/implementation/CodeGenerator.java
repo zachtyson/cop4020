@@ -1,14 +1,9 @@
 package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.*;
-import edu.ufl.cise.plcsp23.runtime.ConsoleIO;
-import jdk.incubator.vector.VectorOperators;
 
-import java.net.URLDecoder;
 import java.util.ArrayList;
-
 import java.util.HashSet;
 import java.util.List;
 
@@ -416,7 +411,24 @@ public class CodeGenerator implements ASTVisitor {
             code.append(")");
             return code.toString();
         }
-        code.append(expr0Code);
+        //Check if the left expression is a binary expression
+        //If it is, then we need to cast it to an int
+        //If it isn't, then we don't need to cast it to an int
+        if(expr0 instanceof BinaryExpr) {
+            code.append("(").append(expr0Code);
+            IToken.Kind bOp = ((BinaryExpr) expr0).getOp();
+            if(bOp == IToken.Kind.AND || bOp == IToken.Kind.OR || bOp == IToken.Kind.GE || bOp == IToken.Kind.LE || bOp == IToken.Kind.EQ  || bOp == IToken.Kind.EXP || op == IToken.Kind.LT || op == IToken.Kind.GT) {
+                if(op == IToken.Kind.AND || op == IToken.Kind.OR || op == IToken.Kind.GE || op == IToken.Kind.LE || op == IToken.Kind.EQ || op == IToken.Kind.LT || op == IToken.Kind.GT){
+                }
+                else {
+                    code.append(" ? 1 : 0");
+                }
+            }
+            code.append(")");
+        } else {
+            code.append(expr0Code);
+
+        }
         code.append(" ").append(opString).append(" ");
         code.append((String) visitExpr(expr1, arg));
         code.append(")");
