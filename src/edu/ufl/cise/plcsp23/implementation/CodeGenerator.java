@@ -32,6 +32,13 @@ public class CodeGenerator implements ASTVisitor {
         //Program ::= Type Ident NameDef* Block
         returnType = program.getType();
         String type = Type.convertToString(returnType);
+        if(type == "image") {
+            imports.add("java.awt.image.BufferedImage");
+            type = "BufferedImage";
+        }
+        if(type == "pixel") {
+            type = "int";
+        }
         String ident = program.getIdent().getName();
         List<NameDef> paramList = program.getParamList();
         Block block = program.getBlock();
@@ -149,6 +156,7 @@ public class CodeGenerator implements ASTVisitor {
 
                 }
                 else if(expr.getType() == Type.IMAGE) {
+                    imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
                     code.append(ident).append(" = ImageOps.cloneImage(").append(exprCode).append(");\n");
                 }
 
@@ -479,7 +487,7 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
-            code.append("ImageOps.binaryImageImageOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            code.append("ImageOps.binaryImageImageOp(").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
 
         }
@@ -493,7 +501,7 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
-            code.append("ImageOps.binaryImageScalarOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            code.append("ImageOps.binaryImageScalarOp(").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
         else if (expr0.getType() == Type.PIXEL && expr1.getType() == Type.PIXEL) {
@@ -507,7 +515,7 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
-            code.append("ImageOps.binaryImagePixelOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            code.append("ImageOps.binaryImagePixelOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
         String expr0Code = (String) visitExpr(expr0, arg);
