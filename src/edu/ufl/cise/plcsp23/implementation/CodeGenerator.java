@@ -469,6 +469,47 @@ public class CodeGenerator implements ASTVisitor {
         IToken.Kind op = binaryExpr.getOp();
         Expr expr1 = binaryExpr.getRight();
         code.append("(");
+        if(expr0.getType() == Type.IMAGE && expr1.getType() == Type.IMAGE) {
+            //Expr0.type == IMAGE
+            //Expr1..type == IMAGE
+            //OP ∈ {+,-,*,/,%).
+            //Use ImageOps.binaryImageImageOp
+            //See test cg6_4
+            imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+            String expr0Code = (String) visitExpr(expr0, arg);
+            String expr1Code = (String) visitExpr(expr1, arg);
+            String opString = convertOpToString(op);
+            code.append("ImageOps.binaryImageImageOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+
+        }
+        else if(expr0.getType() == Type.IMAGE && expr1.getType() == Type.INT) {
+            //Expr0.type == IMAGE
+            //Expr1..type == INT
+            //OP ∈ {+,-,*,/,%).
+            //Use ImageOps.binaryImageScalarOp
+            //See test cg6_5
+            imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+            String expr0Code = (String) visitExpr(expr0, arg);
+            String expr1Code = (String) visitExpr(expr1, arg);
+            String opString = convertOpToString(op);
+            code.append("ImageOps.binaryImageScalarOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+        }
+        else if (expr0.getType() == Type.PIXEL && expr1.getType() == Type.PIXEL) {
+            //Expr0.type == PIXEL
+            //Expr1..type == PIXEL
+            //OP ∈ {+,-,*,/,%).
+            //Use PixelOps.binaryImagePixelOp
+            //See test cg6_6
+            //pretty sure this is a typo and should be binaryPixelPixelOp since there is no binaryImagePixelOp in PixelOps
+            imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+            String expr0Code = (String) visitExpr(expr0, arg);
+            String expr1Code = (String) visitExpr(expr1, arg);
+            String opString = convertOpToString(op);
+            code.append("ImageOps.binaryImagePixelOp(").append(opString).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+        }
         String expr0Code = (String) visitExpr(expr0, arg);
         String opString = convertOpToString(op);
         if (opString.equals("**")){
@@ -657,7 +698,7 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg){
         //PixelFunctionExpr ::= ( x_cart | y_cart | a_polar | r_polar ) PixelSelector
-        //Not implemented in Assignment 5
+        //Not implemented in Project
         return null;
     }
 
