@@ -39,13 +39,13 @@ class Assignment6Test_starter {
 	}
 
 	static final boolean VERBOSE = true;
-	static final boolean WAIT_FOR_INPUT = true;
+	static final boolean WAIT_FOR_INPUT = false;
 
 	/**
 	 * This waits for input to prevent Junit and your IDE from closing the window
 	 * displaying your image before you have a chance to see it. If you do not need
 	 * or want this, set WAIT_FOR_INPUT to false to disable
-	 * 
+	 *
 	 * @throws IOException
 	 */
 
@@ -58,7 +58,7 @@ class Assignment6Test_starter {
 
 	/**
 	 * Displays an image on the screen.
-	 * 
+	 *
 	 * @param obj
 	 * @throws IOException
 	 */
@@ -71,7 +71,7 @@ class Assignment6Test_starter {
 
 	/**
 	 * Normal show that uses obj.toString to display.
-	 * 
+	 *
 	 * @param obj
 	 */
 	void show(Object obj) {
@@ -152,7 +152,7 @@ class Assignment6Test_starter {
 		BufferedImage expected = ImageOps.extractRed(sourceImage);
 		imageEquals(expected, result);
 	}
-	
+
 	@Test
 	void cg6_2a() throws Exception {
 		String input = """
@@ -526,7 +526,7 @@ class Assignment6Test_starter {
 	/*
 	 * This test doesn't check assertions--look at the output It should display a
 	 * black image and a white image that is half the size.
-	 * 
+	 *
 	 * It should also print ff000000 ffffffff
 	 */
 	@Test
