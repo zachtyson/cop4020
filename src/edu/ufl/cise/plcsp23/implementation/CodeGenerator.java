@@ -4,6 +4,7 @@ import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.*;
 import edu.ufl.cise.plcsp23.runtime.ConsoleIO;
+import jdk.incubator.vector.VectorOperators;
 
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ public class CodeGenerator implements ASTVisitor {
     public String getPackageName() {
         return packageName;
     }
-
     Type returnType;
 
     @Override
@@ -177,7 +177,7 @@ public class CodeGenerator implements ASTVisitor {
         if(expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) expr;
             IToken.Kind op = binaryExpr.getOp();
-            if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ) {
+            if(op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
                 code.append("(").append(exprCode).append(") ? 1 : 0");
             }
             else {
@@ -218,7 +218,7 @@ public class CodeGenerator implements ASTVisitor {
             code.append(" != 0");
         } else if (expr instanceof BinaryExpr binaryExpr) {
             IToken.Kind op = binaryExpr.getOp();
-            if(op != IToken.Kind.LE && op != IToken.Kind.LT && op != IToken.Kind.GE && op != IToken.Kind.GT && op != IToken.Kind.EQ) {
+            if(op != IToken.Kind.LE && op != IToken.Kind.LT && op != IToken.Kind.GE && op != IToken.Kind.GT && op != IToken.Kind.EQ && op != IToken.Kind.OR && op != IToken.Kind.AND) {
                 code.append(" != 0");
             }
         }
@@ -360,6 +360,10 @@ public class CodeGenerator implements ASTVisitor {
         String expr0Code = (String) visitExpr(expr0, arg);
         if(expr0 instanceof BinaryExpr) {
             code.append("(").append(expr0Code).append(")");
+            IToken.Kind bOp = ((BinaryExpr) expr0).getOp();
+            if(bOp == IToken.Kind.EXP) {
+                code.append(" != 0");
+            }
         } else {
             code.append("(").append(expr0Code).append(" != 0 )");
 
