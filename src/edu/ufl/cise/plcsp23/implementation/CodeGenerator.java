@@ -589,15 +589,15 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg){
-        //UnaryExpr ::= (! | - | sin | cos | atan) Expr
-//        StringBuilder code = new StringBuilder();
-//        IToken.Kind op = unaryExpr.getOp();
-//        Expr expr = unaryExpr.getE();
-//        code.append(convertOpToString(op)).append("( ");
-//        code.append((String) visitExpr(expr, arg)).append(" )");
-//        return code.toString();
-        return null;
-        //not implemented in assignment 5
+        //Implement ! and – for int.
+        //Here !x can be computed using x==0 ? 1 : 0
+        //You may omit sin, cos, and atan.
+        Expr expr = unaryExpr.getE();
+        IToken.Kind op = unaryExpr.getOp();
+        if(op == IToken.Kind.MINUS) {
+            return "-" + (String) visitExpr(expr, arg);
+        }
+        return "!" + (String) visitExpr(expr, arg) + " == 0 ? 1 : 0";
     }
 
     @Override
@@ -651,7 +651,7 @@ public class CodeGenerator implements ASTVisitor {
                 //see test cg6_0
                 return "ImageOps.getRGB(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getX(),arg) + ", " + (String) visitExpr(unaryExprPostFix.getPixel().getY(),arg) + ")";
             }
-            else if (unaryExprPostFix.getPixel() == null && unaryExprPostFix.getColor() != null) {
+            else if (unaryExprPostFix.getPixel() != null && unaryExprPostFix.getColor() != null) {
                 //case 2:
                 //PrimaryExpr PixelSelector ChannelSelector
                 //Use PixelOps method to get color from pixel
