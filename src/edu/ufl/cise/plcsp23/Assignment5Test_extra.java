@@ -1,6 +1,5 @@
 package edu.ufl.cise.plcsp23;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.image.BufferedImage;

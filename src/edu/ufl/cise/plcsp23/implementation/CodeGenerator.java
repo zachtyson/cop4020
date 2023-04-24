@@ -26,12 +26,14 @@ public class CodeGenerator implements ASTVisitor {
         return packageName;
     }
 
+    Type returnType;
+
     @Override
     public Object visitProgram(Program program, Object arg){
         StringBuilder code = new StringBuilder();
         //Program ::= Type Ident NameDef* Block
-        Type t = program.getType();
-        String type = Type.convertToString(t);
+        returnType = program.getType();
+        String type = Type.convertToString(returnType);
         String ident = program.getIdent().getName();
         List<NameDef> paramList = program.getParamList();
         Block block = program.getBlock();
@@ -233,6 +235,11 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr = returnStatement.getE();
         code.append("return ");
         String exprCode = (String) visitExpr(expr, arg);
+        boolean closeParen = false;
+        if(expr.getType() == Type.INT && returnType == Type.STRING) {
+            closeParen = true;
+            code.append("String.valueOf(");
+        }
         if(expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) expr;
             IToken.Kind op = binaryExpr.getOp();
@@ -244,6 +251,9 @@ public class CodeGenerator implements ASTVisitor {
             }
         } else {
             code.append(exprCode);
+        }
+        if(closeParen) {
+            code.append(")");
         }
         code.append(";").append("\n");
         return code.toString();
