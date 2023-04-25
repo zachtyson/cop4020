@@ -298,6 +298,38 @@ public class CodeGenerator implements ASTVisitor {
                 return code.toString();
             }
         }
+        //Variable type is image with pixel selector, no color channel
+        else if (type == Type.IMAGE && lValue.getPixelSelector() != null && lValue.getColor() == null) {
+            //Define implicit loop over all pixels in image with loop
+            //For example
+            //int hshift = 0.
+            //int vshift = h/2.
+            //c[x,y]= im0[x+hshift, y+vshift].
+            //Translates to
+            //int hshift=0;
+            //int vshift=(h/2);
+            //for (int y = 0; y != c.getHeight(); y++){
+            //for (int x = 0; x != c.getWidth(); x++){
+            //ImageOps.setRGB(c,x,y,
+            //ImageOps.getRGB(im0,(x+hshift0),(y+vshift0)));
+            //}
+            String ident = lValue.getIdent().getNameScope();
+            String pixelSelectorCode = (String) visitPixelSelector(lValue.getPixelSelector(), arg);
+            code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
+            code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
+            code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+            //how am I supposed to get the identifier of the image on the right side of the assignment?
+            //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
+            //I can't just use the identifier of the image on the right side of the assignment, since that's not an lvalue
+            //so I'm just gonna assume it's a UnaryExprPostfix
+            //todo LMAO
+
+
+        }
+        //Variable type is image with pixel selector and color channel
+        else if (type == Type.IMAGE && lValue.getPixelSelector() != null && lValue.getColor() != null) {
+            //todo also cause idk how to do this
+        }
         if(!hasAlreadyAppended) {
             code.append(LValueCode);
             code.append(" = ");
