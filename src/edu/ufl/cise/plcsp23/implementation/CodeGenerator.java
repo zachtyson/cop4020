@@ -327,6 +327,7 @@ public class CodeGenerator implements ASTVisitor {
             code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
             code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
             code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+
             //how am I supposed to get the identifier of the image on the right side of the assignment?
             //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
             //I can't just use the identifier of the image on the right side of the assignment, since that's not an lvalue
@@ -338,6 +339,36 @@ public class CodeGenerator implements ASTVisitor {
         //Variable type is image with pixel selector and color channel
         else if (type == Type.IMAGE && lValue.getPixelSelector() != null && lValue.getColor() != null) {
             //todo also cause idk how to do this
+            //im[x,y]:grn = Z.
+            //im[x,y]:blu = Z.
+
+            //for (int y = 0; y != im.getHeight(); y++){
+            //for (int x = 0; x != im.getWidth(); x++){
+            //ImageOps.setRGB(im,x,y,
+            //PixelOps.setGrn(ImageOps.getRGB(im,x,y),255));
+            //}
+            //}
+            //for (int y = 0; y != im.getHeight(); y++){
+            //for (int x = 0; x != im.getWidth(); x++){
+            //ImageOps.setRGB(im,x,y,
+            //PixelOps.setBlu(ImageOps.getRGB(im,x,y),255));
+            //}
+            //}
+
+            code.append("for(int y = 0; y != ").append(lValue.getIdent().getNameScope()).append(".getHeight(); y++) {\n");
+            code.append("for(int x = 0; x != ").append(lValue.getIdent().getNameScope()).append(".getWidth(); x++) {\n");
+            code.append("ImageOps.setRGB(").append(lValue.getIdent().getNameScope()).append(", x, y, ");
+            String lValueColor = lValue.getColor().toString();
+            //capitalize first letter of color
+            lValueColor = lValueColor.substring(0, 1).toUpperCase() + lValueColor.substring(1);
+
+            code.append("PixelOps.set").append(lValueColor).append("(ImageOps.getRGB(").append(lValue.getIdent().getNameScope()).append(", x, y), ");
+            code.append(exprCode).append("))");
+            code.append(";\n");
+            code.append("}\n");
+            code.append("}\n");
+            return code.toString();
+
         }
         if(!hasAlreadyAppended) {
             code.append(LValueCode);
