@@ -54,6 +54,14 @@ public class CodeGenerator implements ASTVisitor {
         String publicClass = "public class " + ident + " {\n";
         StringBuilder publicStatic = new StringBuilder("public static " + type + " apply(");
         for(int i = 0; i < paramNames.size(); i++) {
+            String paramType = paramTypes.get(i);
+            if(paramType == "image") {
+                imports.add("java.awt.image.BufferedImage");
+                paramType = "BufferedImage";
+            }
+            if(paramType == "pixel") {
+                paramType = "int";
+            }
             publicStatic.append(paramTypes.get(i)).append(" ").append(paramNames.get(i));
             if(i != paramNames.size() - 1) {
                 publicStatic.append(", ");
@@ -324,10 +332,65 @@ public class CodeGenerator implements ASTVisitor {
             //}
             String ident = lValue.getIdent().getNameScope();
             String pixelSelectorCode = (String) visitPixelSelector(lValue.getPixelSelector(), arg);
-            code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
-            code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
-            code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
-            code.append("ImageOps.getRGB(").append(ident).append(", ");
+//            code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
+//            code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
+//            code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+//            String ident2 = ((IdentExpr) assignmentStatement.getE()).getNameScope();
+//            IdentExpr identExpr = (IdentExpr) assignmentStatement.getE();
+//            code.append("ImageOps.getRGB(").append(ident2).append(", ");
+//            code.append(pixelSelectorCode).append("))");
+//            code.append(");\n");
+//            code.append("}\n");
+//            code.append("}\n");
+//            if(expr instanceof ExpandedPixelExpr) {
+//                //BufferedImage expected = ImageOps.makeImage(size, size);
+//                //		for (int x = 0; x != expected.getWidth(); x++) {
+//                //			for (int y = 0; y != expected.getHeight(); y++) {
+//                //				ImageOps.setRGB(expected, x, y, PixelOps.pack((x - y), 0, (y - x)));
+//                //			}
+//                //		}
+//                //im[x,y] = [x-y, 0, y-x].
+//            }
+            if(expr instanceof ExpandedPixelExpr) {
+                ExpandedPixelExpr expandedPixelExpr = (ExpandedPixelExpr) expr;
+                code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
+                code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
+                code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+                String r = (String) visitExpandedPixelExpr(expandedPixelExpr, arg);
+
+                code.append(r);
+                code.append(");\n");
+                code.append("}\n");
+                code.append("}\n");
+                return code.toString();
+            }
+            if(expr instanceof UnaryExprPostfix) {
+                //System.out.println("UnaryExprPostfix:" + exprCode);
+                code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
+                code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
+                code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+                code.append(exprCode);
+                code.append(");\n");
+                code.append("}\n");
+                code.append("}\n");
+                return code.toString();
+            }
+            if(expr instanceof ConditionalExpr) {
+                code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
+                code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
+                code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+                code.append("(");
+                code.append(exprCode);
+                code.append(")");
+                code.append(");\n");
+                code.append("}\n");
+                code.append("}\n");
+                return code.toString();
+            }
+            String exprType = expr.getClass().toString();
+            code.append(exprType);
+            code.append("int i = 0 /0; //todo: implement me\n");
+            return code.toString();
 
             //how am I supposed to get the identifier of the image on the right side of the assignment?
             //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
@@ -665,7 +728,7 @@ public class CodeGenerator implements ASTVisitor {
             //OP ∈ {+,-,*,/,%).
             //Use PixelOps.binaryImagePixelOp
             //See test cg6_6
-            //pretty sure this is a typo and should be binaryPixelPixelOp since there is no binaryImagePixelOp in PixelOps
+            //pretty sure this is a typo and should be binaryPackedPixelPixelOp since there is no binaryImagePixelOp in PixelOps
             imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
@@ -877,7 +940,8 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExp, Object arg){
         //PredeclaredVarExpr ::= x | y | a | r
         //Not implemented in Assignment 5
-        return null;
+
+        return predeclaredVarExp.firstToken.getTokenString();
     }
 
     @Override
