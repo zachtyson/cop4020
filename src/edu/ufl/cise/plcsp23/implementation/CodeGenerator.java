@@ -641,6 +641,14 @@ public class CodeGenerator implements ASTVisitor {
             code.append("ImageOps.binaryPackedPixelPixelOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
+        else if (expr0.getType() == Type.PIXEL && expr1.getType() == Type.INT) {
+            imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+            String expr0Code = (String) visitExpr(expr0, arg);
+            String expr1Code = (String) visitExpr(expr1, arg);
+            String opString = convertOpToString(op);
+            code.append("ImageOps.binaryPackedPixelIntOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            return code.toString();
+        }
         String expr0Code = (String) visitExpr(expr0, arg);
         String opString = convertOpToString(op);
         if (opString.equals("**")){
