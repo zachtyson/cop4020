@@ -55,14 +55,14 @@ public class CodeGenerator implements ASTVisitor {
         StringBuilder publicStatic = new StringBuilder("public static " + type + " apply(");
         for(int i = 0; i < paramNames.size(); i++) {
             String paramType = paramTypes.get(i);
-            if(paramType == "image") {
+            if(paramType.equals("image") || paramType.equals("IMAGE")) {
                 imports.add("java.awt.image.BufferedImage");
                 paramType = "BufferedImage";
             }
-            if(paramType == "pixel") {
+            if(paramType.equals("pixel") || paramType.equals("PIXEL")) {
                 paramType = "int";
             }
-            publicStatic.append(paramTypes.get(i)).append(" ").append(paramNames.get(i));
+            publicStatic.append(paramType).append(" ").append(paramNames.get(i));
             if(i != paramNames.size() - 1) {
                 publicStatic.append(", ");
             }
