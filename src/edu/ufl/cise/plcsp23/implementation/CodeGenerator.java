@@ -136,7 +136,9 @@ public class CodeGenerator implements ASTVisitor {
             imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
             String ident = nameDef.getIdent().getNameScope();
             code.append(type).append(" ").append(ident).append(";\n");
-            code.append(ident).append(" = ").append(exprCode).append(";\n");
+            if(expr != null) {
+                code.append(ident).append(" = ").append(exprCode).append(";\n");
+            }
             return code.toString();
 
         } else if (type.equals("image") || type.equals("IMAGE")) {
@@ -264,12 +266,6 @@ public class CodeGenerator implements ASTVisitor {
         boolean hasAlreadyAppended = false;
         boolean hasEndingParen = false;
 
-        if(type == Type.PIXEL) {
-
-            code.append("PixelOps.pack(");
-            hasAlreadyAppended = true;
-            hasEndingParen = true;
-        }
         if(type == Type.IMAGE && lValue.getPixelSelector() == null && lValue.getColor() == null) {
             //Variable type is image, no pixel selector, no color channel
             //Right side is string.
