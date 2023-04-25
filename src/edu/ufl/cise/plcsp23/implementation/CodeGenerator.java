@@ -389,13 +389,11 @@ public class CodeGenerator implements ASTVisitor {
             //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
             //I can't just use the identifier of the image on the right side of the assignment, since that's not an lvalue
             //so I'm just gonna assume it's a UnaryExprPostfix
-            //todo LMAO
 
 
         }
         //Variable type is image with pixel selector and color channel
         else if (type == Type.IMAGE && lValue.getPixelSelector() != null && lValue.getColor() != null) {
-            //todo also cause idk how to do this
             //im[x,y]:grn = Z.
             //im[x,y]:blu = Z.
 
@@ -429,7 +427,6 @@ public class CodeGenerator implements ASTVisitor {
         }
         //variable type is image with no pixel and has a color channel
         else if(type == Type.IMAGE && lValue.getPixelSelector() == null && lValue.getColor() != null) {
-            //todo also cause idk how to do this
             //for (int y = 0; y != d; y++)
             //            for (int x = 0; x != d; x++)
             //                ImageOps.setRGB(eren1, x, y, PixelOps.red(PixelOps.pack(0, 0, 0)));
