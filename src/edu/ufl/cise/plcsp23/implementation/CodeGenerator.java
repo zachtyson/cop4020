@@ -399,7 +399,7 @@ public class CodeGenerator implements ASTVisitor {
         if(expr.getType() == Type.PIXEL) {
             code.append("ConsoleIO.writePixel(");
             code.append((String) visitExpr(expr, arg));
-            code.append("));").append("\n");
+            code.append(");").append("\n");
             return code.toString();
         }
         code.append("ConsoleIO.write(");
