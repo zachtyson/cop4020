@@ -624,7 +624,7 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
-            code.append("ImageOps.binaryImageScalarOp(").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            code.append("ImageOps.binaryImageScalarOp(ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
         else if (expr0.getType() == Type.PIXEL && expr1.getType() == Type.PIXEL) {
