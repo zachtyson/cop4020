@@ -2,14 +2,10 @@ package edu.ufl.cise.plcsp23.implementation;
 
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.ast.*;
-import edu.ufl.cise.plcsp23.runtime.FileURLIO;
-import edu.ufl.cise.plcsp23.runtime.*;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 
 public class CodeGenerator implements ASTVisitor {
     //So CodeGenerator is run after the type checker, so we can assume that the types are correct, and we can just generate the code
@@ -33,11 +29,11 @@ public class CodeGenerator implements ASTVisitor {
         //Program ::= Type Ident NameDef* Block
         returnType = program.getType();
         String type = Type.convertToString(returnType);
-        if(type == "image") {
+        if(type.equals("image") || type.equals("IMAGE")){
             imports.add("java.awt.image.BufferedImage");
             type = "BufferedImage";
         }
-        if(type == "pixel") {
+        if(type.equals("pixel") || type.equals("PIXEL")){
             type = "int";
         }
         String ident = program.getIdent().getName();
