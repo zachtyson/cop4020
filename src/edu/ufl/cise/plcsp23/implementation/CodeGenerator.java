@@ -127,8 +127,8 @@ public class CodeGenerator implements ASTVisitor {
             imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
             String ident = nameDef.getIdent().getNameScope();
             code.append(type).append(" ").append(ident).append(";\n");
-            code.append(ident).append(" = PixelOps.pack(").append(exprCode).append(");\n");
-
+            code.append(ident).append(" = ").append(exprCode).append(";\n");
+            return code.toString();
 
         } else if (type == "image") {
             type = "BufferedImage";
@@ -175,7 +175,7 @@ public class CodeGenerator implements ASTVisitor {
 
                 //So like [2, 3] is the size of the image, I think
                 //Default pixel values are ff000000 so
-                String dimensionString = nameDef.getDimension().toString();
+                String dimensionString = visitDimension(nameDef.getDimension(), arg).toString();
                 if(expr == null) {
                     //use ImageOps.makeImage
                     imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
@@ -239,10 +239,70 @@ public class CodeGenerator implements ASTVisitor {
         //AssignmentStatement ::= LValue = Expr
         LValue lValue = assignmentStatement.getLv();
         Expr expr = assignmentStatement.getE();
-        code.append((String) visitLValue(lValue, arg));
-        code.append(" = ");
         String exprCode = (String) visitExpr(expr, arg);
+
+        String LValueCode = (String) visitLValue(lValue, arg);
+        Type type = lValue.getIdent().getDef().getType();
+
+        boolean hasAlreadyAppended = false;
         boolean hasEndingParen = false;
+
+        if(type == Type.PIXEL) {
+
+            code.append("PixelOps.pack(");
+            hasAlreadyAppended = true;
+            hasEndingParen = true;
+        }
+        if(type == Type.IMAGE && lValue.getPixelSelector() == null && lValue.getColor() == null) {
+            //Variable type is image, no pixel selector, no color channel
+            //Right side is string.
+            //Read image from url or file, but copy into lhs image, resizing source image.
+            //Use readImage and copyInto.
+            //See cg26a
+            //Right side is image.
+            //Copy image into destination, resizing.
+            //Use copyInto.
+            //See cg20
+            //Right side is pixel
+            //Set all pixels to given pixel value.
+            //Use ImageOps.setAllPixels
+            //See cg20a
+
+            Type exprType = expr.getType();
+            if(exprType == Type.STRING) {
+                imports.add("edu.ufl.cise.plcsp23.runtime.FileURLIO");
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                code.append("ImageOps.copyInto(FileURLIO.readImage(").append(exprCode).append("), ").append(lValue.getIdent().getNameScope()).append(")");
+                if(hasEndingParen) {
+                    code.append(")");
+                }
+                code.append(";").append("\n");
+                return code.toString();
+            }
+            else if(exprType == Type.IMAGE) {
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                code.append("ImageOps.copyInto(").append(exprCode).append(", ").append(lValue.getIdent().getNameScope()).append(")");
+                if(hasEndingParen) {
+                    code.append(")");
+                }
+                code.append(";").append("\n");
+                return code.toString();
+            }
+            else if(exprType == Type.PIXEL) {
+                imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                code.append("ImageOps.setAllPixels(").append(lValue.getIdent().getNameScope()).append(", ").append(exprCode).append(")");
+                if(hasEndingParen) {
+                    code.append(")");
+                }
+                code.append(";").append("\n");
+                return code.toString();
+            }
+        }
+        if(!hasAlreadyAppended) {
+            code.append(LValueCode);
+            code.append(" = ");
+        }
+
         //Assignment Compatibility
         //image image
         //      pixel
@@ -512,7 +572,7 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
-            code.append("ImageOps.binaryImageImageOp(").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
+            code.append("ImageOps.binaryImageImageOp(ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
 
         }
