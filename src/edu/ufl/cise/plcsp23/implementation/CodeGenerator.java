@@ -288,8 +288,20 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg){
         StringBuilder code = new StringBuilder();
         //WriteStatement ::= write Expr
+        //There is an implementation of
+        //ConsoleIO.write where EXPR is an Image, so
+        //this case can be handled uniformly.
+        //However, if the expr has type Pixel, then
+        //ConsoleIO.writePixel must be invoked
+        //instead.
         imports.add("edu.ufl.cise.plcsp23.runtime.ConsoleIO");
         Expr expr = writeStatement.getE();
+        if(expr.getType() == Type.PIXEL) {
+            code.append("ConsoleIO.writePixel(");
+            code.append((String) visitExpr(expr, arg));
+            code.append("));").append("\n");
+            return code.toString();
+        }
         code.append("ConsoleIO.write(");
         code.append((String) visitExpr(expr, arg));
         code.append(");").append("\n");
