@@ -327,6 +327,7 @@ public class CodeGenerator implements ASTVisitor {
             code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
             code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
             code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
+            code.append("ImageOps.getRGB(").append(ident).append(", ");
 
             //how am I supposed to get the identifier of the image on the right side of the assignment?
             //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
