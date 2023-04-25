@@ -720,8 +720,14 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg){
         //ExpandedPixelExpr ::= Expr0 Expr1 Expr2
-        //Not implemented in Assignment 5
-        return null;
+        //Invoke PixelOps.pack on the values of the
+        //three expressions.
+        //See test cg6_7
+        imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+        Expr expr0 = expandedPixelExpr.getRedExpr();
+        Expr expr1 = expandedPixelExpr.getGrnExpr();
+        Expr expr2 = expandedPixelExpr.getBluExpr();
+        return "PixelOps.pack(" + (String) visitExpr(expr0, arg) + ", " + (String) visitExpr(expr1, arg) + ", " + (String) visitExpr(expr2, arg) + ")";
     }
 
 }
