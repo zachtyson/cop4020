@@ -175,14 +175,13 @@ public class CodeGenerator implements ASTVisitor {
 
                 //So like [2, 3] is the size of the image, I think
                 //Default pixel values are ff000000 so
-                String widthString = visitExpr(nameDef.getDimension().getWidth(), arg).toString();
-                String heightString = visitExpr(nameDef.getDimension().getHeight(), arg).toString();
+                String dimensionString = nameDef.getDimension().toString();
                 if(expr == null) {
                     //use ImageOps.makeImage
                     imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
                     String ident = nameDef.getIdent().getNameScope();
                     code.append(type).append(" ").append(ident).append(";\n");
-                    code.append(ident).append(" = ImageOps.makeImage(").append(widthString).append(", ").append(heightString).append(");\n");
+                    code.append(ident).append(" = ImageOps.makeImage(").append(dimensionString).append(");\n");
 
                 }
                 else {
@@ -191,14 +190,14 @@ public class CodeGenerator implements ASTVisitor {
                         imports.add("edu.ufl.cise.plcsp23.runtime.FileURLIO");
                         String ident = nameDef.getIdent().getNameScope();
                         code.append(type).append(" ").append(ident).append(";\n");
-                        code.append(ident).append(" = FileURLIO.readImage(").append(exprCode).append(", ").append(widthString).append(", ").append(heightString).append(");\n");
+                        code.append(ident).append(" = FileURLIO.readImage(").append(exprCode).append(", ").append(dimensionString).append(");\n");
                     }
                     else if (expr.getType() == Type.IMAGE) {
                         //use copyAndResize
                         imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
                         String ident = nameDef.getIdent().getNameScope();
                         code.append(type).append(" ").append(ident).append(";\n");
-                        code.append(ident).append(" = ImageOps.copyAndResize(").append(exprCode).append(", ").append(widthString).append(", ").append(heightString).append(");\n");
+                        code.append(ident).append(" = ImageOps.copyAndResize(").append(exprCode).append(", ").append(dimensionString).append(");\n");
                     }
                 }
             }
@@ -370,8 +369,13 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitDimension(Dimension dimension, Object arg){
         //Dimension ::= Expr0 Expr1
-        //Not implemented in Assignment 5
-        return null;
+        //Generate comma separated code to evaluate
+        //the two expressions
+        Expr expr0 = dimension.getWidth();
+        Expr expr1 = dimension.getHeight();
+        String expr0Code = (String) visitExpr(expr0, arg);
+        String expr1Code = (String) visitExpr(expr1, arg);
+        return expr0Code + ", " + expr1Code;
     }
 
     @Override
