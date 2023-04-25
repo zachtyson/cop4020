@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 public class CodeGenerator implements ASTVisitor {
     //So CodeGenerator is run after the type checker, so we can assume that the types are correct, and we can just generate the code
@@ -118,7 +119,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr = declaration.getInitializer();
         String exprCode = (String) visitExpr(expr, arg);
         String type = Type.convertToString(nameDef.getType());
-        if(type == "pixel") {
+        if(type.equals("pixel") || type.equals("PIXEL")) {
             type = "int";
             //Initializers when var is pixel
             //Java type is int, rhs is pixel, use
@@ -130,7 +131,7 @@ public class CodeGenerator implements ASTVisitor {
             code.append(ident).append(" = ").append(exprCode).append(";\n");
             return code.toString();
 
-        } else if (type == "image") {
+        } else if (type.equals("image") || type.equals("IMAGE")) {
             type = "BufferedImage";
             imports.add("java.awt.image.BufferedImage");
             if(nameDef.getDimension() == null) {
@@ -198,6 +199,14 @@ public class CodeGenerator implements ASTVisitor {
                         String ident = nameDef.getIdent().getNameScope();
                         code.append(type).append(" ").append(ident).append(";\n");
                         code.append(ident).append(" = ImageOps.copyAndResize(").append(exprCode).append(", ").append(dimensionString).append(");\n");
+                    }
+                    else if (expr.getType() == Type.PIXEL) {
+                        //use ImageOps.makeImage
+                        imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+                        String ident = nameDef.getIdent().getNameScope();
+                        code.append(type).append(" ").append(ident).append(";\n");
+                        code.append(ident).append(" = ImageOps.makeImage(").append(dimensionString).append(");\n");
+                        code.append("ImageOps.setAllPixels(").append(ident).append(", ").append(exprCode).append(");\n");
                     }
                 }
             }
@@ -475,9 +484,6 @@ public class CodeGenerator implements ASTVisitor {
         //LValue ::= Ident (PixelSelector | ε ) (ChannelSelector | ε )
         //For assignment 5, only handle the case where there is no PixelSelector and no ChannelSelector.
         //This means that the LValue is just an Ident.
-        if(lValue.getPixelSelector() != null || lValue.getColor() != null) {
-            throw new UnsupportedOperationException("PixelSelector and ChannelSelector not supported in Assignment 5");
-        }
         Ident ident = lValue.getIdent();
         return visitIdent(ident, arg);
 
