@@ -394,8 +394,17 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg){
         //PixelSelector ::= [ Expr0 Expr1 ]
-        //Not implemented in Assignment 5
-        return null;
+        //Generate comma separated code to evaluate
+        //the two expressions. (Visit children, adding
+        //comma in between)
+        //see test cg21.
+        //is this, not the same as a dimension?
+
+        Expr expr0 = pixelSelector.getX();
+        Expr expr1 = pixelSelector.getY();
+        String expr0String = (String) visitExpr(expr0,arg);
+        String expr1String = (String) visitExpr(expr1,arg);
+        return expr0String + " , " + expr1String;
     }
 
     @Override
