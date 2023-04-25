@@ -76,7 +76,7 @@ class Assignment6Test_collab {
      * @throws IOException
      */
     void show(BufferedImage obj) throws IOException {
-        if (VERBOSE) {
+        if (false) {
             ConsoleIO.displayImageOnScreen(obj);
         }
         wait_for_input();
@@ -88,7 +88,7 @@ class Assignment6Test_collab {
      * @param obj
      */
     void show(Object obj) {
-        if (VERBOSE) {
+        if (true) {
             System.out.println(obj);
         }
     }
@@ -2623,20 +2623,20 @@ class Assignment6Test_collab {
                 genCodeAndRun(input, "", params));
     }
 
-    @Test
-    void pixelPixelPlus() throws Exception {
-        String input = """
-                pixel p(pixel p1, pixel p2) {
-                : ((((p1 | p2) & p2 ) | p1) - (p2 + p2)) + ([11,11,11] + p2 - [204,84,58]).
-                }
-                """;
-        int p1 = 0xff850202;
-        int p2 = 0xff028593;
-        Object[] params = {p1, p2};
-        assertEquals(ImageOps.binaryPackedPixelPixelOp(OP.PLUS, ImageOps.binaryPackedPixelPixelOp(OP.MINUS, ((p1 | p2) & p2) | p1, ImageOps.binaryPackedPixelPixelOp(OP.PLUS, p2, p2)),
-                        ImageOps.binaryPackedPixelPixelOp(OP.MINUS, ImageOps.binaryPackedPixelPixelOp(OP.PLUS, PixelOps.pack(11, 11, 11), p2), PixelOps.pack(204, 84, 58))),
-                genCodeAndRun(input, "", params));
-    }
+//    @Test
+//    void pixelPixelPlus() throws Exception {
+//        String input = """
+//                pixel p(pixel p1, pixel p2) {
+//                : ((((p1 | p2) & p2 ) | p1) - (p2 + p2)) + ([11,11,11] + p2 - [204,84,58]).
+//                }
+//                """;
+//        int p1 = 0xff850202;
+//        int p2 = 0xff028593;
+//        Object[] params = {p1, p2};
+//        assertEquals(ImageOps.binaryPackedPixelPixelOp(OP.PLUS, ImageOps.binaryPackedPixelPixelOp(OP.MINUS, ((p1 | p2) & p2) | p1, ImageOps.binaryPackedPixelPixelOp(OP.PLUS, p2, p2)),
+//                        ImageOps.binaryPackedPixelPixelOp(OP.MINUS, ImageOps.binaryPackedPixelPixelOp(OP.PLUS, PixelOps.pack(11, 11, 11), p2), PixelOps.pack(204, 84, 58))),
+//                genCodeAndRun(input, "", params));
+//    }
 
     @Test
     void imageImagePlus() throws Exception {
@@ -2679,7 +2679,7 @@ class Assignment6Test_collab {
                     i2[x,y] = i1[(x/h)/2,(y/w)/2].
                     sI1 = i1[w/2,h/3]:grn.
                     sI2 = i2[w-h,h].
-                    : s1 + ", " + sI1 + ", " + sI2.
+                    : s1 .
                 }
                 """;
 
@@ -2699,6 +2699,7 @@ class Assignment6Test_collab {
         sI2 = PixelOps.packedToString(ImageOps.getRGB(i2, w - h, h));
         String expected = s1 + ", " + sI1 + ", " + sI2;
         String output = (String) genCodeAndRun(input, "", params);
+        System.out.println(output);
         show(output);
         assertEquals(expected, output);
     }

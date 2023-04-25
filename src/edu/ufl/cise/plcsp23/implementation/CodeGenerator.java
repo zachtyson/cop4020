@@ -383,10 +383,7 @@ public class CodeGenerator implements ASTVisitor {
                 code.append("}\n");
                 return code.toString();
             }
-            String exprType = expr.getClass().toString();
-            code.append(exprType);
-            code.append("int i = 0 /0; //todo: implement me\n");
-            return code.toString();
+            throw new UnsupportedOperationException("Not yet implemented");
 
             //how am I supposed to get the identifier of the image on the right side of the assignment?
             //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
@@ -427,6 +424,28 @@ public class CodeGenerator implements ASTVisitor {
             code.append(";\n");
             code.append("}\n");
             code.append("}\n");
+            return code.toString();
+
+        }
+        //variable type is image with no pixel and has a color channel
+        else if(type == Type.IMAGE && lValue.getPixelSelector() == null && lValue.getColor() != null) {
+            //todo also cause idk how to do this
+            //for (int y = 0; y != d; y++)
+            //            for (int x = 0; x != d; x++)
+            //                ImageOps.setRGB(eren1, x, y, PixelOps.red(PixelOps.pack(0, 0, 0)));
+            code.append("for(int y = 0; y != ").append(lValue.getIdent().getNameScope()).append(".getHeight(); y++) {\n");
+            code.append("for(int x = 0; x != ").append(lValue.getIdent().getNameScope()).append(".getWidth(); x++) {\n");
+            code.append("ImageOps.setRGB(").append(lValue.getIdent().getNameScope()).append(", x, y, ");
+            String lValueColor = lValue.getColor().toString();
+            //lowercase entire color
+            lValueColor = lValueColor.toLowerCase();
+            code.append("PixelOps.").append(lValueColor).append("(").append(exprCode);
+            code.append("))");
+            code.append(";\n");
+            code.append("}\n");
+            code.append("}\n");
+
+
             return code.toString();
 
         }
@@ -825,9 +844,17 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr = unaryExpr.getE();
         IToken.Kind op = unaryExpr.getOp();
         if(op == IToken.Kind.MINUS) {
-            return "-" + (String) visitExpr(expr, arg);
+            String exprCode = (String) visitExpr(expr, arg);
+            if(expr instanceof BinaryExpr) {
+                BinaryExpr binaryExpr = (BinaryExpr) expr;
+                IToken.Kind binaryOp = binaryExpr.getOp();
+                if(binaryOp == IToken.Kind.GT || binaryOp == IToken.Kind.LT || binaryOp == IToken.Kind.GE || binaryOp == IToken.Kind.LE || binaryOp == IToken.Kind.EQ || binaryOp == IToken.Kind.AND || binaryOp == IToken.Kind.OR) {
+                    return "-(" + exprCode + " ? 1 : 0)";
+                }
+            }
+            return "-" + exprCode;
         }
-        return "!" + (String) visitExpr(expr, arg) + " == 0 ? 1 : 0";
+        return "! (" + (String) visitExpr(expr, arg) + " == 0) ? 0 : 1";
     }
 
     @Override
