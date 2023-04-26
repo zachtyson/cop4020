@@ -405,6 +405,8 @@ public class CodeGenerator implements ASTVisitor {
             //PixelOps.setBlu(ImageOps.getRGB(im,x,y),255));
             //}
             //}
+            imports.add("edu.ufl.cise.plcsp23.runtime.ImageOps");
+            imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
 
             code.append("for(int y = 0; y != ").append(lValue.getIdent().getNameScope()).append(".getHeight(); y++) {\n");
             code.append("for(int x = 0; x != ").append(lValue.getIdent().getNameScope()).append(".getWidth(); x++) {\n");
@@ -713,6 +715,10 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
+            if(op == IToken.Kind.EQ) {
+                code.append("ImageOps.binaryPackedPixelBooleanOp(ImageOps.BoolOP.EQUALS, ").append(expr0Code).append(", ").append(expr1Code).append("))");
+                return code.toString();
+            }
             code.append("ImageOps.binaryImageImageOp(ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
 
@@ -727,6 +733,10 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
+            if(op == IToken.Kind.EQ) {
+                code.append("ImageOps.binaryPackedPixelBooleanOp(ImageOps.BoolOP.EQUALS, ").append(expr0Code).append(", ").append(expr1Code).append("))");
+                return code.toString();
+            }
             code.append("ImageOps.binaryImageScalarOp(ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
@@ -741,6 +751,10 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
+            if(op == IToken.Kind.EQ) {
+                code.append("ImageOps.binaryPackedPixelBooleanOp(ImageOps.BoolOP.EQUALS, ").append(expr0Code).append(", ").append(expr1Code).append("))");
+                return code.toString();
+            }
             code.append("ImageOps.binaryPackedPixelPixelOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
