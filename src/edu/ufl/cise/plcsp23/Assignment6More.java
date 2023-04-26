@@ -2560,7 +2560,8 @@ class Assignment6Test_collab {
     void intIntPlus() throws Exception {
         String input = """
                 int m(int i, int j) {
-                : -(i == j) + ((((i*j>0) > 0) < i) + i - --j).
+                int kk =  -(i == j) + ((((i*j>0) > 0) < i) + i - --j).
+                :kk.
                 }
                 """;
         int i = 10;

@@ -831,11 +831,7 @@ public class CodeGenerator implements ASTVisitor {
             code.append("(").append(expr0Code);
             IToken.Kind bOp = ((BinaryExpr) expr0).getOp();
             if(bOp == IToken.Kind.AND || bOp == IToken.Kind.OR || bOp == IToken.Kind.GE || bOp == IToken.Kind.LE || bOp == IToken.Kind.EQ  || bOp == IToken.Kind.LT ||bOp == IToken.Kind.GT) {
-                if(op == IToken.Kind.AND || op == IToken.Kind.OR || op == IToken.Kind.GE || op == IToken.Kind.LE || op == IToken.Kind.EQ || op == IToken.Kind.LT || op == IToken.Kind.GT){
-                }
-                else {
-                    code.append(" ? 1 : 0");
-                }
+                code.append(" ? 1 : 0");
             }
             code.append(")");
         } else {
