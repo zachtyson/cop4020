@@ -435,6 +435,12 @@ public class CodeGenerator implements ASTVisitor {
             //lowercase entire color
             lValueColor = lValueColor.toLowerCase();
             code.append("PixelOps.").append(lValueColor).append("(").append(exprCode);
+            if(expr instanceof BinaryExpr){
+                IToken.Kind op = ((BinaryExpr) expr).getOp();
+                if(op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
+                    code.append("?1:0"  );
+                }
+            }
             code.append("))");
             code.append(";\n");
             code.append("}\n");
@@ -547,6 +553,11 @@ public class CodeGenerator implements ASTVisitor {
         if(expr.getType() == Type.INT && returnType == Type.STRING) {
             closeParen = true;
             code.append("String.valueOf(");
+        }
+        if(expr.getType() == Type.PIXEL && returnType == Type.STRING) {
+            closeParen = true;
+            imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+            code.append("PixelOps.packedToString(");
         }
         if(expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) expr;
@@ -755,6 +766,10 @@ public class CodeGenerator implements ASTVisitor {
                 code.append("ImageOps.binaryPackedPixelBooleanOp(ImageOps.BoolOP.EQUALS, ").append(expr0Code).append(", ").append(expr1Code).append("))");
                 return code.toString();
             }
+            if(op == IToken.Kind.BITAND || op == IToken.Kind.BITOR) {
+                code.append(expr0Code).append(" ").append(opString).append(" ").append(expr1Code).append(")");
+                return code.toString();
+            }
             code.append("ImageOps.binaryPackedPixelPixelOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
@@ -763,6 +778,17 @@ public class CodeGenerator implements ASTVisitor {
             String expr0Code = (String) visitExpr(expr0, arg);
             String expr1Code = (String) visitExpr(expr1, arg);
             String opString = convertOpToString(op);
+            if(op == IToken.Kind.EXP) {
+                //PixelOps.pack((int) Math.pow(PixelOps.red(p2), 2), (int) Math.pow(PixelOps.grn(p2), 2),
+                //                                (int) Math.pow(PixelOps.blu(p2), 2))));
+                imports.add("java.lang.Math");
+                imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
+                code.append("PixelOps.pack((int) Math.pow(PixelOps.red(").append(expr0Code).append("), ")
+                        .append(expr1Code).append("), (int) Math.pow(PixelOps.grn(").append(expr0Code).append("), ")
+                        .append(expr1Code).append("), (int) Math.pow(PixelOps.blu(").append(expr0Code).append("), ")
+                        .append(expr1Code).append(")))");
+                return code.toString();
+            }
             code.append("ImageOps.binaryPackedPixelIntOp(").append("ImageOps.OP.").append(op).append(", ").append(expr0Code).append(", ").append(expr1Code).append("))");
             return code.toString();
         }
@@ -799,10 +825,12 @@ public class CodeGenerator implements ASTVisitor {
         //Check if the left expression is a binary expression
         //If it is, then we need to cast it to an int
         //If it isn't, then we don't need to cast it to an int
+        String expr1Code = (String) visitExpr(expr1, arg);
+
         if(expr0 instanceof BinaryExpr) {
             code.append("(").append(expr0Code);
             IToken.Kind bOp = ((BinaryExpr) expr0).getOp();
-            if(bOp == IToken.Kind.AND || bOp == IToken.Kind.OR || bOp == IToken.Kind.GE || bOp == IToken.Kind.LE || bOp == IToken.Kind.EQ  || bOp == IToken.Kind.EXP || op == IToken.Kind.LT || op == IToken.Kind.GT) {
+            if(bOp == IToken.Kind.AND || bOp == IToken.Kind.OR || bOp == IToken.Kind.GE || bOp == IToken.Kind.LE || bOp == IToken.Kind.EQ  || bOp == IToken.Kind.LT ||bOp == IToken.Kind.GT) {
                 if(op == IToken.Kind.AND || op == IToken.Kind.OR || op == IToken.Kind.GE || op == IToken.Kind.LE || op == IToken.Kind.EQ || op == IToken.Kind.LT || op == IToken.Kind.GT){
                 }
                 else {
@@ -815,7 +843,7 @@ public class CodeGenerator implements ASTVisitor {
 
         }
         code.append(" ").append(opString).append(" ");
-        code.append((String) visitExpr(expr1, arg));
+        code.append(expr1Code);
         code.append(")");
         return code.toString();
 
@@ -955,6 +983,14 @@ public class CodeGenerator implements ASTVisitor {
             //see test cg6_3
             imports.add("edu.ufl.cise.plcsp23.runtime.PixelOps");
             String c = unaryExprPostFix.getColor().name().toLowerCase();
+            String p = (String) visitExpr(unaryExprPostFix.getPrimary(), arg);
+            if(unaryExprPostFix.getPrimary() instanceof BinaryExpr) {
+                BinaryExpr expr = (BinaryExpr) unaryExprPostFix.getPrimary();
+                IToken.Kind op = ((BinaryExpr) expr).getOp();
+                if(op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
+                    return "PixelOps."+c+"(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + "?1:0)";
+                }
+            }
             return "PixelOps."+c+"(" + (String) visitExpr(unaryExprPostFix.getPrimary(), arg) + ")";
         }
     }
@@ -984,7 +1020,40 @@ public class CodeGenerator implements ASTVisitor {
         Expr expr0 = expandedPixelExpr.getRedExpr();
         Expr expr1 = expandedPixelExpr.getGrnExpr();
         Expr expr2 = expandedPixelExpr.getBluExpr();
-        return "PixelOps.pack(" + (String) visitExpr(expr0, arg) + ", " + (String) visitExpr(expr1, arg) + ", " + (String) visitExpr(expr2, arg) + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("PixelOps.pack(");
+        String red = (String) visitExpr(expr0, arg);
+        String grn = (String) visitExpr(expr1, arg);
+        String blu = (String) visitExpr(expr2, arg);
+        sb.append(red);
+        if(expr0 instanceof BinaryExpr) {
+            BinaryExpr expr = (BinaryExpr) expr0;
+            IToken.Kind op = ((BinaryExpr) expr0).getOp();
+            if(op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
+                sb.append("?1:0");
+            }
+        }
+        sb.append(",");
+        sb.append(grn);
+        if(expr1 instanceof BinaryExpr) {
+            BinaryExpr expr = (BinaryExpr) expr1;
+            IToken.Kind op = ((BinaryExpr) expr1).getOp();
+            if(op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
+                sb.append("?1:0");
+            }
+        }
+        sb.append(",");
+        sb.append(blu);
+        if(expr2 instanceof BinaryExpr) {
+            BinaryExpr expr = (BinaryExpr) expr2;
+            IToken.Kind op = ((BinaryExpr) expr2).getOp();
+
+            if(op == IToken.Kind.GE || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.LT || op == IToken.Kind.EQ || op == IToken.Kind.AND || op == IToken.Kind.OR) {
+                sb.append("?1:0");
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
 }
