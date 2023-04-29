@@ -324,25 +324,6 @@ public class CodeGenerator implements ASTVisitor {
             //}
             String ident = lValue.getIdent().getNameScope();
             String pixelSelectorCode = (String) visitPixelSelector(lValue.getPixelSelector(), arg);
-//            code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
-//            code.append("for(int x = 0; x != ").append(ident).append(".getWidth(); x++) {\n");
-//            code.append("ImageOps.setRGB(").append(ident).append(", x, y, ");
-//            String ident2 = ((IdentExpr) assignmentStatement.getE()).getNameScope();
-//            IdentExpr identExpr = (IdentExpr) assignmentStatement.getE();
-//            code.append("ImageOps.getRGB(").append(ident2).append(", ");
-//            code.append(pixelSelectorCode).append("))");
-//            code.append(");\n");
-//            code.append("}\n");
-//            code.append("}\n");
-//            if(expr instanceof ExpandedPixelExpr) {
-//                //BufferedImage expected = ImageOps.makeImage(size, size);
-//                //		for (int x = 0; x != expected.getWidth(); x++) {
-//                //			for (int y = 0; y != expected.getHeight(); y++) {
-//                //				ImageOps.setRGB(expected, x, y, PixelOps.pack((x - y), 0, (y - x)));
-//                //			}
-//                //		}
-//                //im[x,y] = [x-y, 0, y-x].
-//            }
             if(expr instanceof ExpandedPixelExpr) {
                 ExpandedPixelExpr expandedPixelExpr = (ExpandedPixelExpr) expr;
                 code.append("for(int y = 0; y != ").append(ident).append(".getHeight(); y++) {\n");
@@ -379,14 +360,6 @@ public class CodeGenerator implements ASTVisitor {
                 code.append("}\n");
                 return code.toString();
             }
-            throw new UnsupportedOperationException("Not yet implemented");
-
-            //how am I supposed to get the identifier of the image on the right side of the assignment?
-            //I can't just use the identifier of the lvalue, since that's the identifier of the image on the left side of the assignment
-            //I can't just use the identifier of the image on the right side of the assignment, since that's not an lvalue
-            //so I'm just gonna assume it's a UnaryExprPostfix
-
-
         }
         //Variable type is image with pixel selector and color channel
         else if (type == Type.IMAGE && lValue.getPixelSelector() != null && lValue.getColor() != null) {
